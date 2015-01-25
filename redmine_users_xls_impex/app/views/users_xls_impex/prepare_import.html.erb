@@ -1,4 +1,4 @@
-<h2><%=l(:label_users_xlsie_header)%></h2>
+<%= title [l(:label_user_plural), users_path], l(:label_users_xlsie_caption) %>
 
 <%= form_tag({:action => 'import'} ) do %>
   <fieldset class="box"><legend><%= l(:label_users_xlsie_legend_prepare) %></legend>

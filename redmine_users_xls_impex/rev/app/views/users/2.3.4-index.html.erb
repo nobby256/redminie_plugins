@@ -2,9 +2,9 @@
 <%= link_to l(:label_user_new), new_user_path, :class => 'icon icon-add' %>
 <!--VVK start -->
 &nbsp;
-<%= link_to 'Export', {:controller => 'users_xls_impex', :action => 'export_start'} %>
+<%= link_to l(:label_users_xlsie_header), {:controller => 'users_xls_impex', :action => 'export_start'}, :class => 'icon icon-add' %>
 &nbsp;
-<%= link_to 'Import', {:controller => 'users_xls_impex', :action => 'import_start'} %>
+<%= link_to l(:label_users_xlsie_caption), {:controller => 'users_xls_impex', :action => 'import_start'}, :class => 'icon icon-add' %>
 <!--VVK end -->
 </div>
 

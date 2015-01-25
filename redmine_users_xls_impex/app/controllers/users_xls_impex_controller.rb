@@ -78,6 +78,8 @@ end
 class UsersXlsImpexController < ApplicationController
   unloadable
 
+  layout 'admin'
+
   helper :sort
   include SortHelper
   helper :custom_fields

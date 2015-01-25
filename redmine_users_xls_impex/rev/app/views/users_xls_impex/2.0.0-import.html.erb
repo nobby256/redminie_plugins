@@ -2,7 +2,7 @@
   <%= stylesheet_link_tag "users_xlsie.css", :plugin => UIEX_AssetHelpers::PLUGIN_NAME.to_s, :media => "screen" %>
 <% end %>
 
-<h2><%=l(:label_users_xlsie_header)%></h2>
+<%= title [l(:label_user_plural), users_path], l(:label_users_xlsie_caption) %>
 
 <%= form_tag({:action => 'import_results'}, {:multipart => true, :id => 'import_options_form' }) do %>
   <fieldset class="box"><legend><%= l(:label_users_xlsie_legend_columns) %></legend>
