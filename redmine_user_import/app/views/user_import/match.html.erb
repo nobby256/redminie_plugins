@@ -3,7 +3,7 @@
     <%= stylesheet_link_tag 'imoprter', :plugin => 'redmine_user_import' %>
 <% end %>
 
-<%= title [l(:label_user_plural), users_path], l(:label_match_columns) %>
+<%= title [l(:label_user_plural), users_path], [l(:user_import), {:action => :index}], l(:label_match_columns) %>
 <%= form_tag({:action => 'result'}) do %>
     <fieldset class="box"><legend><%= t(:label_match_select) %></legend>
     <% @headers.each do |column| %>

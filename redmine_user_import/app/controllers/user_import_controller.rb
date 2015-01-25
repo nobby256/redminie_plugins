@@ -93,6 +93,7 @@ class UserImportController < ApplicationController
     @handle_count = 0
     @failed_count = 0
     @failed_rows = Hash.new
+    @messages = Array.new
 
     CSV.foreach(tmpfile.path, {:headers=>true, :encoding=>"UTF-8", :quote_char=>wrapper, :col_sep=>splitter, :row_sep=>:auto}) do |row|
       user = User.find_by_login(row[attrs_map["login"]])
@@ -105,14 +106,20 @@ class UserImportController < ApplicationController
         user.lastname = row[attrs_map["lastname"]]
         user.firstname = row[attrs_map["firstname"]]
         user.mail = row[attrs_map["mail"]]
+
+        unless user.save
+          @failed_count += 1
+          @failed_rows[@failed_count] = row
+          @messages << "Warning: The following data-validation errors occurred on user #{@failed_count} in the list below"
+          user.errors.each do |attr, error_message|
+            @messages << "Error: #{attr} #{error_message}"
+          end
+        end
       else
-        flash[:warning] = l(:message_unique_filed_duplicated)
         @failed_count += 1
-        @failed_rows[@handle_count + 1] = row
-      end
-      if (!user.save :validate => false)
-        @failed_count += 1
-        @failed_rows[@handle_count + 1] = row
+        @failed_rows[@failed_count] = row
+        @messages << "Warning: The following constraint errors occurred on user #{@failed_count} in the list below"
+        @messages << "Error: #{l(:message_unique_filed_duplicated)}"
       end
 
       @handle_count += 1
