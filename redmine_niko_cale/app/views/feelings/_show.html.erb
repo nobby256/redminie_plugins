@@ -1,0 +1,55 @@
+<%
+# Niko-cale plugin for Redmine
+# Copyright (C) 2010  Yuki Kita
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%>
+
+<div class="contextual"><%= raw link_to_feeling_list(:user=>feeling.user) %></div>
+<h3><%= index_for(feeling, true) %></h3>
+  <ul>
+    <% if preview %>
+      <%= raw image_for(feeling) %>
+    <% else %>  
+      <%= raw link_to_feeling(feeling, @project && @project.identifier) %>
+    <% end %>
+  </ul>
+<% if feeling.has_description? %>
+  <div class="wiki">
+  <%= textilizable(feeling.description) %>
+  </div>
+<% end %>
+<% if editable?(feeling) && !preview %>
+   <p><%= link_to l(:button_update), edit_feeling_path(:id=>feeling, :project_id=>(@project && @project.identifier)), {:class=>'icon icon-edit'}  %>
+   <%= link_to l(:button_delete), feeling_path(:id=>feeling, :project_id=>(@project ? @project.identifier : nil)),
+       {:method=>:delete, :confirm=>l(:text_are_you_sure), :class=>'icon icon-del'}  %></p>
+<% end %>
+
+<% if feeling.has_comments? %>
+  <div id="comments" style="margin-bottom:16px;">
+    <h3 class="comments"><%= l(:label_comment_plural) %><%= "(#{l(:label_x_comments, :count => feeling.comments_count)})" %></h3>
+    <% feeling.comments.each do |comment| %>
+    <div class="contextual">
+      <% if current_user_allowed_to?(:feelings, :edit_comment) && ((User.current == comment.author) || (User.current == feeling.user)) %>
+        <%= link_to l(:button_delete), {:action => 'edit_comment', :id => feeling.id, :comment_id => comment.id, :project_id=>(@project && @project.identifier)},
+                   {:confirm => l(:text_are_you_sure), :method => :delete, :title => l(:button_delete), :class=>'icon icon-del'} %>
+     <% end %>
+     </div>
+     <p class="author"><%= authoring comment.created_on, comment.author %></p>
+     <div class="wiki">
+       <%= render :partial=>"comment", :locals=>{:comments=>comment.comments} %>
+     </div>
+    <% end %>
+  </div>
+<% end %>

@@ -1,0 +1,62 @@
+<%
+# Niko-cale plugin for Redmine
+# Copyright (C) 2010  Yuki Kita
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%>
+
+<%= render :partial=>'header' %>
+
+<h3><%= l(:label_niko_cale_how_do_you_feel) %> (<%= h(format_date(@feeling.at)) %>)</h3>
+<% project_id = @project && @project.identifier %>
+<% if @feeling.new_record? %>
+  <% option = {:url=>{:action=>:create, :project_id=>project_id}, :html=>{:method=>:post, :id=>:update_feeling}} %>
+  <% @feeling.good %>
+<% else %>
+  <% option = {:url=>{:action=>:update, :project_id=>project_id}, :html=>{:method=>:put, :id=>:update_feeling}} %>
+<% end %>
+<%= form_for(:feeling, option) do |f| %>
+   <%= f.hidden_field :at %>
+   <table border="0">
+     <tr>
+       <td><%= face_image('good', l(:label_niko_cale_good), "document.forms.update_feeling.feeling_level_2.click()", "cursor: pointer;") %></td>
+       <td><%= face_image('ordinary', l(:label_niko_cale_ordinary), "document.forms.update_feeling.feeling_level_1.click()", "cursor: pointer;") %></td>
+       <td><%= face_image('bad', l(:label_niko_cale_bad), "document.forms.update_feeling.feeling_level_0.click()", "cursor: pointer;") %></td>
+     </tr>
+     <tr>
+       <% 2.downto(0) do |level| %>
+         <td align="center"><%= f.radio_button(:level, level, {:onclick=>'document.forms.update_feeling.feeling_description.focus()'}) %></td> 
+       <% end %>
+     </tr>
+  </table>
+  <p><%= l(:label_optional_description) %><br>
+  <p><%= f.text_area :description, :cols=>56, :rows=>3 %></p>
+  <%= wikitoolbar_for 'feeling_description' %>
+  <%= submit_tag l(:button_save), :class => 'button-small', :name => nil %>
+
+  <a id="preview_link"><%= l(:label_preview) %></a>
+<script type="text/javascript">
+$(function() {
+  $("#preview_link").bind("click", function() {
+    var params = $("#update_feeling").serialize();
+    $.post('<%= raw url_for( @feeling.new_record? ? {:action => :create} : {:action => :update, :id => @feeling} ) %>', params, function(data) {
+      $("#preview").html(data);
+    });
+    return false;
+  });
+})
+</script>
+<% end %>
+<%= javascript_tag 'document.forms.update_feeling.feeling_description.focus()' %>
+<div id="preview"></div>

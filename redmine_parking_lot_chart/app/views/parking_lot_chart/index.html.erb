@@ -1,0 +1,92 @@
+<% html_title "#{@project.name} - " + l(:parking_lot_chart) -%>
+
+<% content_for :header_tags do %>
+<style type="text/css">
+    .versionbox { float:left; width: 120px; height:100px; margin:3px; padding: 2px; border: 1px solid #999999;}
+    .versionboxtitle {
+     font-size:1.2em; font-weight:bold; width:100%; height:40px;
+      text-align:center; border-bottom: 1px solid #999999;
+      overflow:auto;
+    }
+    .versionboxvalue { font-size:0.8em; width:100%; text-align:center;}
+    .versionboxbar { padding-left: 5px; padding-right: 5px }
+    .versionboxbartable { width:100%; height:0.8em; border:1px solid #999999;border-collapse: collapse; border-spacing: 0; }
+    .versionboxclosed100 { background-color: #666666; width:100%; }
+    .versionboxopen100 { width:100%; }
+</style>
+<% end %>
+
+<% content_for :sidebar do -%>
+  <h3><%= l(:parking_lot_chart_menu_info) %></h3>
+  <div><%= l(:parking_lot_chart_menu_today, :today => @today) %></div>
+  <div>
+    <div><span style="height:1em;width:2em;background-color: #ff6666">&nbsp;&nbsp;&nbsp;</span> <%= l(:parking_lot_chart_menu_color_late) %></div>
+    <div><span style="height:1em;width:2em;background-color: #ff9900">&nbsp;&nbsp;&nbsp;</span> <%= l(:parking_lot_chart_menu_color_pinch) %></div>
+    <div><span style="height:1em;width:1.2em;background-color: #ffff66">&nbsp;&nbsp;&nbsp;</span> <%= l(:parking_lot_chart_menu_color_1week) %></div>
+    <div><span style="height:1em;width:1.2em;background-color: #ccffff">&nbsp;&nbsp;&nbsp;</span> <%= l(:parking_lot_chart_menu_color_relax) %> </div>
+    <div><span style="height:1em;width:1.2em;background-color: #cccccc">&nbsp;&nbsp;&nbsp;</span> <%= l(:parking_lot_chart_menu_color_closed) %> </div>
+  </div>
+  <h3><%= l(:parking_lot_chart_menu_filter) %></h3>
+  <div<% if params[:status].nil? %><%= " style='font-weight:bold'" %><%  end %>>
+    <%= link_to l(:parking_lot_chart_open_version), {:controller => 'parking_lot_chart', :action => 'index', :project_id => @project.identifier} %><br />
+  </div>
+  <div<% if params[:status] == 'locked' %><%= " style='font-weight:bold'" %><%  end %>>
+    <%= link_to l(:parking_lot_chart_locked_version), {:controller => 'parking_lot_chart', :action => 'index', :project_id => @project.identifier, :status => 'locked'} %><br />
+  </div>
+  <div<% if params[:status] == 'closed' %><%=  " style='font-weight:bold'" %><%  end %>>
+    <%= link_to l(:parking_lot_chart_closed_version), {:controller => 'parking_lot_chart', :action => 'index', :project_id => @project.identifier, :status => 'closed'} %><br />
+  </div>
+  <p/>
+  <div<% if params[:status] == 'all' %><%= " style='font-weight:bold'" %><%  end %>>
+    <%= link_to l(:parking_lot_chart_all_version), {:controller => 'parking_lot_chart', :action => 'index', :project_id => @project.identifier, :status => 'all'} %>
+  </div>
+  <div<% if params[:status] == 'no_effective_date' %><%=  " style='font-weight:bold'" %><%  end %>>
+    <%= link_to l(:parking_lot_chart_no_effective_date_version), {:controller => 'parking_lot_chart', :action => 'index', :project_id => @project.identifier, :status => 'no_effective_date'} %><br />
+  </div>
+<% end -%>
+
+<% @chart_data.each do |data| %>
+  <%
+    if data.issues_status == 'closed'
+      style = "background-color:#cccccc;"
+    elsif data.issues_status == 'late'
+      style = "background-color:#ff6666;"
+    elsif data.issues_status == 'pinch'
+      style = "background-color:#ff9900;"
+    elsif data.issues_status == 'one more week'
+      style = "background-color:#ffff66;"
+    elsif data.issues_status == 'relax'
+      style = "background-color:#ccffff;"
+    else
+      style = "background-color:#ccffff;"
+    end
+  %>
+  <div class="versionbox" style="<%= style %>">
+    <div class="versionboxtitle">
+      <%= link_to data.name, {:controller => 'versions', :action => 'show', :id => data.id} %>
+    </div>
+    <div class="versionboxvalue">
+      <%= l(:parking_lot_chart_estimated_hours) %>:<%= data.estimated_hours %><br />
+      <%= link_to l(:parking_lot_chart_closed) + data.closed_issues_count.to_s, {:controller => 'issues', :action => 'index', :project_id => @project.identifier, :fixed_version_id => data.id, :set_filter => 1, :status_id => "c"} %>
+      /
+      <%= link_to l(:parking_lot_chart_open) + data.open_issues_count.to_s, {:controller => 'issues', :action => 'index', :project_id => @project.identifier, :fixed_version_id => data.id, :set_filter => 1, :status_id => "o"} %><br />
+      <%= l(:parking_lot_chart_effective_date) %>:<% if data.effective_date %><%= data.effective_date %><% else %>---<% end %>
+    </div>
+    <div class="versionboxbar">
+      <table class="versionboxbartable">
+        <tr>
+          <% if data.closed_issues_count == 0 || data.open_issues_count + data.closed_issues_count == 0 %>
+            <td class="versionboxopen100"></td>
+          <% elsif data.closed_issues_count >= 1 && data.open_issues_count == 0 %>
+            <td class="versionboxclosed100"></td>
+          <% else %>
+            <td style="background-color: red; width: <%= data.closed_issues_pourcent %>%;"></td>
+            <td style="width: <%= data.open_issues_pourcent %>%;"></td>
+          <% end %>
+        </tr>
+      </table>
+    </div>
+  </div>
+<% end %>
+    
+<br style="clear:both" />

@@ -1,0 +1,81 @@
+#bubble_tooltip{
+	width:147px;
+	position:absolute;
+	display:none;
+}
+#bubble_tooltip .bubble_top{
+	background-image: url('../images/bubble_top.gif');
+	background-repeat:no-repeat;
+	height:16px;	
+}
+#bubble_tooltip .bubble_middle{
+	background-image: url('../images/bubble_middle.gif');
+	background-repeat:repeat-y;	
+	background-position:bottom left;
+	padding-left:7px;
+	padding-right:7px;
+}
+#bubble_tooltip .bubble_middle span{
+	position:relative;
+	top:-8px;
+	font-family: Trebuchet MS, Lucida Sans Unicode, Arial, sans-serif;
+	font-size:12px;
+}
+#bubble_tooltip .bubble_bottom{
+	background-image: url('../images/bubble_bottom.gif');
+	background-repeat:no-repeat;
+	background-repeat:no-repeat;	
+	height:44px;
+	position:relative;
+	top:-6px;
+}
+
+table.nikocale	{
+	border-collapse: collapse;	border-spacing: 0;
+	margin-bottom: 10px;
+        border-color: #c0c0c0;
+}
+table.nikocale tbody tr:hover { background-color:#ffffdd; }
+
+th	{
+        background-color: #DCDCDC;
+        text-align: center;
+}
+th.date	{
+	height: 24px;
+	width: 54px;
+}
+th.today {
+	height: 24px;
+	width: 54px;
+        background-color: #f6f7f8;
+}
+td.feeling {
+	height: 54px;
+	width: 54px;
+        text-align: center;
+}
+.morale {
+        background-color: #DCDCDC;
+}
+td.user {
+	height: 54px;
+        width: 15%;
+	padding: 5px 10px;
+        text-align: center;
+}
+td.user img.gravatar {
+        float: right;
+}
+
+/***** Tooltips ******/
+span.tooltip:hover span.tip{
+display:block;
+position:absolute;
+top:12px; left:24px; width:270px;
+border:1px solid #555;
+background-color:#fff;
+padding: 4px;
+font-size: 0.8em;
+color:#505050;
+}

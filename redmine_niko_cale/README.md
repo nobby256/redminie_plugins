@@ -1,0 +1,2 @@
+# redmine_niko_cale2
+redmine_niko_caleのredmine2.6対応版です

@@ -1,0 +1,89 @@
+<%
+# Niko-cale plugin for Redmine
+# Copyright (C) 2010  Yuki Kita
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%>
+
+<div id="niko_niko_calendar" style="overflow-x:auto">
+<table border="1" class="nikocale">
+  <thead>
+  <tr>
+    <th rowspan="3" nowrap width="10%">
+      <%= previous_image(l(:label_previous), 'document.forms["scope"].date_scope.value = "' + (@dates.first - 1).to_s + '"') %>
+      <%= next_image(l(:label_next), 'document.forms["scope"].date_scope.value = "' + (@dates.last + @dates.size).to_s + '"') %>
+    </th>
+    <% if @dates.first.year == @dates.last.year %>
+      <th colspan=<%= "#{@dates.size}" %>><%= @dates.first.year %></th>
+    <% else %>
+      <th colspan=<%= "#{(@dates.first.end_of_year - @dates.first + 1).to_i}" %>><%= @dates.first.year %></th>
+      <% unless @dates.first.month == @dates.last.month %>
+        <th colspan=<%= "#{(@dates.last - @dates.first.end_of_year + 1).to_i}" %>><%= @dates.last.year %></th>
+      <% end %>
+    <% end %>
+  </tr>
+  <tr>
+    <th colspan=<%= "#{(@dates.first.end_of_month - @dates.first + 1).to_i}" %>><%= l(:date)[:abbr_month_names][@dates.first.month] %></th>
+    <% unless @dates.first.month == @dates.last.month %>
+      <th colspan=<%= "#{(@dates.last - @dates.first.end_of_month + 1).to_i}" %>><%= l(:date)[:abbr_month_names][@dates.last.month] %></th>
+    <% end %>
+  </tr>
+  <tr>
+    <% @dates.each do |date| %>
+      <th class=<%= (date == Date.today) ? 'today' : 'date' %>>
+        <%= link_to_date date, @project %>
+        <% versions = @versions.select {|version| version.effective_date == date} %>
+        <% versions.each do |version| %>
+          <span class="tooltip" style="position: absolute;top:">
+            <%= link_to(version_image, {:controller=>:versions, :action=>:show, :id=>version.id}) %>
+	    <span class="tip"><%= version.name %><span>
+          </span>
+      <% end %>
+      </th>
+    <% end %>
+  </tr>
+  </thead>
+  <tfoot>
+  <% unless @morales.empty? %>
+  <tr class=morale feeling>
+    <td class=user><%= raw link_to_feeling_list(:project=>@project, :title=>@project.name) %></td> 
+    <% @dates.each do |date| %>
+      <% morale = @morales.find {|m| m.at == date} %>
+      <td class=feeling><%= raw image_for(morale) %></td>
+    <% end %>
+  </tr>
+  <% end %>
+  </tfoot>
+  <tbody>
+  <% @users.each do |user| %>
+  <tr class=<%= cycle 'odd', 'even' %>> 
+    <td class=user>
+       <p><%= avatar(user, :size => "32") %><%= link_to_user(user) %></p>
+       <p><%= raw link_to_issues_list(@issues_count_per_user[user], @project.identifier, user.id) %></p>
+    </td> 
+    <% @dates.each do |date| %>
+      <% feeling = @feelings_per_user[user].find {|feeling| feeling.at == date} %>
+      <td class=feeling>
+        <% if feeling.nil? && editable?(Feeling.for(user, date)) && @project.users.include?(user) %>
+  <%= link_to(add_image, {:controller=>:feelings, :action=>:new, "feeling"=>{"at"=>date}, :project_id=>@project.identifier}) %>
+	<% else %>
+          <%= raw link_to_feeling(feeling, @project.identifier) %>
+	<% end %>
+      </td>
+    <% end %>
+  </tr> 
+  <% end; reset_cycle %>
+  </tbody>
+</table>
+</div>

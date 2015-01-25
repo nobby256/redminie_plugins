@@ -1,0 +1,49 @@
+<%
+# Niko-cale plugin for Redmine
+# Copyright (C) 2010  Yuki Kita
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%>
+
+<%= render :partial=>'header' %>
+
+<h2><%= l(:label_niko_cale_feeling) %> </h2>
+
+<% if @feeling %>
+  <%= render :partial=>'show', :locals=>{:feeling=>@feeling, :preview=>false} %>
+<% end %>
+
+<% if current_user_allowed_to? :feelings, :edit_comment %>
+  <p><%= toggle_link l(:label_comment_add), "add_comment_form", :focus => "comment_comments" %></p>
+  <%= form_tag(url_for({:action => 'edit_comment', :id => @feeling.id, :project_id=>((@project && @project.identifier) || nil)}),
+               {:id => "add_comment_form", :style => "display:none;"}) do %>
+    <div class="box">
+       <%= text_area 'comment', 'comments', :cols => 48, :rows => 3 %>
+    </div>
+    <p><%= submit_tag l(:button_add) %>
+    <a id="preview_link"><%= l(:label_preview) %></a>
+<script type="text/javascript">
+$(function() {
+  $("#preview_link").bind("click", function() {
+    var params = $("#add_comment_form").serialize();
+    $.post('<%= url_for({:action => :edit_comment, :id => @feeling.id, :project_id=>((@project && @project.identifier) || nil)}) %>', params, function(data) {
+      $("#preview").html(data);
+    });
+    return false;
+  });
+})
+</script>
+  <% end %>
+  <div id="preview"></div>
+<% end %>

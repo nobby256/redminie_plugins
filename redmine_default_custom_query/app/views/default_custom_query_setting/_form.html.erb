@@ -1,0 +1,21 @@
+<%= labelled_form_for @default_query ||= @project.init_default_query,
+                      as: :settings,
+                      url: default_custom_query_setting_update_path(@project),
+                      remote: true, method: :put, html: { id: 'default-query-setting' } do |f| %>
+
+  <%= error_messages_for @default_query %>
+
+  <div class="box tabular">
+    <p>
+      <%= f.select :query_id, options_for_selectable_queries(@project), include_blank: true %><br>
+      <em><%=l 'default_custom_query.text_allowed_queries' %></em>
+    </p>
+  </div>
+  <%= submit_tag l(:button_save) %>
+<% end %>
+
+<script>
+  $('#default-query-setting').on('ajax:success', function(data, result, xhr) {
+    $('#tab-content-default_custom_query').html(result);
+  });
+</script>
