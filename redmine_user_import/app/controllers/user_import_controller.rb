@@ -4,6 +4,7 @@ require 'nkf'
 
 class UserImportController < ApplicationController
   unloadable
+  layout 'admin'
 
   before_filter :require_admin
 
@@ -13,6 +14,13 @@ class UserImportController < ApplicationController
   end
 
   def match
+    unless params[:file]
+      flash[:error] = 'You must provide a file !'
+
+      redirect_to :action => 'index'
+      return
+    end
+
     # params
     file = params[:file]
     splitter = params[:splitter]
@@ -58,7 +66,8 @@ class UserImportController < ApplicationController
 
 #      debugger
 #      @attrs.push([l_has_string?("field_#{attr}".to_sym) ? l("field_#{attr}".to_sym) : attr.to_s.humanize, attr])
-      @attrs.push(["field_#{attr}".to_sym, attr])
+#      @attrs.push(["field_#{attr}".to_sym, attr])
+      @attrs.push([l_or_humanize(attr, :prefix=>"field_"), attr])
     end
 #    @attrs.sort!
   end

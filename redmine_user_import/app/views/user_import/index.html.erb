@@ -1,12 +1,12 @@
 <% html_title t(:user_import) -%>
-<h2><%= t(:user_import) %></h2>
+<%= title [l(:label_user_plural), users_path], l(:user_import) %>
 <%= form_tag({:action => 'match'}, {:multipart => true}) do %>
   <p><label><%=t(:label_upload_notice)%></label><br/>
   <%= file_field_tag 'file', :size => 60%></p>
 
   <fieldset class="box"><legend><%= t(:label_upload_format) %></legend>
      <p><label><%=t(:label_upload_encoding)%></label>
-    <%= select_tag "encoding", options_for_select( [["SJIS", "S"], ["UTF8", "U"], ["EUC", "EUC"]] ) %></p>
+    <%= select_tag "encoding", options_for_select( [["UTF8", "U"], ["SJIS", "S"], ["EUC", "EUC"]] ) %></p>
     
     <p><label><%=t(:label_upload_splitter)%></label>
     <%= text_field_tag "splitter", ',', {:size => 3, :maxlength => 1}%></p>

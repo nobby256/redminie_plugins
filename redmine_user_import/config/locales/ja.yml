@@ -15,6 +15,7 @@ ja:
   label_toplines: "%{original_filename} ファイルを全件表示:"
   message_missing_imported_file: "アップロードされたファイルが見つかりません。"
   button_submit: "登録"
+  option_ignore: "無視"
 
   # result view
   label_import_result: "登録結果"

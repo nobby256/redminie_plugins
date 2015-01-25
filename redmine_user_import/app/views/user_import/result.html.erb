@@ -3,7 +3,7 @@
     <%= stylesheet_link_tag 'imoprter', :plugin => 'redmine_user_import' %>
 <% end %>
 
-<h2><%= t(:label_import_result) %></h2>
+<%= title [l(:label_user_plural), users_path], l(:label_import_result) %>
 <p><%= t(:label_result_notice, { :upload_count => @handle_count, :success_count => @handle_count - @failed_count } ) %></p>
 
 <hr/>
