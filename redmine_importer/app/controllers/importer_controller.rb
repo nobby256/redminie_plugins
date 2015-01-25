@@ -134,21 +134,13 @@ class ImporterController < ApplicationController
   # Returns the issue object associated with the given value of the given attribute.
   # Raises NoIssueForUniqueValue if not found or MultipleIssuesForUniqueValue
   def issue_for_unique_attr(unique_attr, attr_value, row_data)
-p "1111"
-p "attr_value=" + attr_value.to_s
-p "unique_attr=" + unique_attr.to_s
-p "@issue_by_unique_attr.has_key?(attr_value)  " + @issue_by_unique_attr.has_key?(attr_value).to_s
     if @issue_by_unique_attr.has_key?(attr_value)
-p "2222"
       return @issue_by_unique_attr[attr_value]
     end
-p "3333"
 
     if unique_attr == "id"
-p "4444"
       issues = [Issue.find_by_id(attr_value)]
     else
-p "5555"
       # Use IssueQuery class Redmine >= 2.3.0
       begin
         if Module.const_get('IssueQuery') && IssueQuery.is_a?(Class)
@@ -164,20 +156,14 @@ p "5555"
       
       issues = Issue.find :all, :conditions => query.statement, :limit => 2, :include => [ :assigned_to, :status, :tracker, :project, :priority, :category, :fixed_version ]
     end
-p "6666"
-p "issues.size=" + issues.size.to_s
     if issues.size > 1
-p "7777"
       @failed_count += 1
       @failed_issues[@failed_count] = row_data
       @messages << "Warning: Unique field #{unique_attr} with value '#{attr_value}' in issue #{@failed_count} has duplicate record"
       raise MultipleIssuesForUniqueValue, "Unique field #{unique_attr} with value '#{attr_value}' has duplicate record"
     elsif issues.size == 0 || !issues.first
-p "8888"
         raise NoIssueForUniqueValue, "No issue with #{unique_attr} of '#{attr_value}' found"
     end
-p "9999"
-p "issues.first=" + issues.first.to_s
    return issues.first
   end
 
@@ -353,7 +339,6 @@ p "issues.first=" + issues.first.to_s
       if update_issue
         begin
           issue = issue_for_unique_attr(unique_attr,row[unique_field],row)
-p issue
           # ignore other project's issue or not
           if issue.project_id != @project.id && !update_other_project
             @skip_count += 1
