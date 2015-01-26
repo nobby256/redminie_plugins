@@ -15,6 +15,7 @@ end
 
 class ImporterController < ApplicationController
   unloadable
+  menu_item :settings
   
   before_filter :find_project
 

@@ -11,5 +11,12 @@ Redmine::Plugin.register :redmine_importer do
   project_module :importer do
     permission :import, :importer => :index
   end
-  menu :project_menu, :importer, { :controller => 'importer', :action => 'index' }, :caption => :label_import, :before => :settings, :param => :project_id
+  #menu :project_menu, :importer, { :controller => 'importer', :action => 'index' }, :caption => :label_import, :before => :settings, :param => :project_id
+
+  Rails.configuration.to_prepare do
+    require_dependency 'projects_helper'
+    unless ProjectsHelper.included_modules.include? IssueImportHelperPatch
+      ProjectsHelper.send(:include, IssueImportHelperPatch)  
+    end 
+  end 
 end

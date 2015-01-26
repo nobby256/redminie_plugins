@@ -1,3 +1,7 @@
-match '/importer/index', :to => 'importer#index', :via => [:get, :post]
-match '/importer/match', :to => 'importer#match', :via => [:get, :post]
-match '/importer/result', :to => 'importer#result', :via => [:get, :post]
+# Plugin's routes
+RedmineApp::Application.routes.draw do
+  scope '/projects/:project_id/importer' do
+    post 'match', :controller => :importer, :action => 'match'
+    post 'result', :controller => :importer, :action => 'result'
+  end
+end
