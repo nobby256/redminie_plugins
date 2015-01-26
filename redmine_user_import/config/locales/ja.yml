@@ -2,7 +2,7 @@ ja:
   user_import: "ユーザーのインポート"
 
   # index view
-  label_upload_notice: "CSVファイルを選択してください。ヘッダー行が必要です。"
+  label_upload_notice: "CSV ファイルを選択してください。ヘッダー行が必要です。最大サイズは 4MB です。"
   label_upload_format: "ファイルフォーマットのオプション"
   label_upload_encoding: "エンコーディング:"
   label_upload_splitter: "フィールドの区切り文字:"
@@ -10,16 +10,16 @@ ja:
   button_upload: "ファイルをアップロード"
 
   # match view
-  label_match_columns: "カラム対応確認"
-  label_match_select: "各列が対応するフィールドを選択："
-  label_toplines: "%{original_filename} のすべての行:"
+  label_match_columns: "各列のフィールドとの対応"
+  label_match_select: "各列が対応するフィールドを選択"
+  label_toplines: "%{original_filename} の先頭行:"
   message_missing_imported_file: "アップロードされたファイルが見つかりません。"
   button_submit: "確認"
   option_ignore: "無視"
 
   # result view
   label_import_result: "インポート結果"
-  label_result_notice: "%{upload_count} 行が処理されました。%{success_count} 行が正しく追加されました。"
+  label_result_notice: "%{handle_count} 行が処理されました。%{success_count} 行が正しく追加されました。"
   label_result_messages: "メッセージ"
-  label_result_failed: "失敗した行数: %{failed_count}"
+  label_result_failed: "失敗した行数: %{count}"
   message_unique_filed_duplicated: "\"login\"フィールドが既存のレコードと重複している行が見つかりました。"

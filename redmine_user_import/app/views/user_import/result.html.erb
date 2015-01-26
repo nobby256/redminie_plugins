@@ -4,7 +4,7 @@
 <% end %>
 
 <%= title [l(:label_user_plural), users_path], [l(:user_import), {:action => :index}], l(:label_import_result) %>
-<p><%= t(:label_result_notice, { :upload_count => @handle_count, :success_count => @handle_count - @failed_count } ) %></p>
+<p><%= t(:label_result_notice, { :handle_count => @handle_count, :success_count => @handle_count - @failed_count } ) %></p>
 
 <% if not @messages.empty? %>
   <hr/>
@@ -19,7 +19,7 @@
 <hr/>
 
 <% if @failed_count > 0 %>
-  <h3><%= t(:label_result_failed, { :failed_count => @failed_count } ) %></h3>
+  <h3><%= t(:label_result_failed, { :count => @failed_count } ) %></h3>
 <table class="list">
     <thead><tr>
         <th>#</th>
