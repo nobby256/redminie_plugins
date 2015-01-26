@@ -3,12 +3,15 @@
     <%= stylesheet_link_tag 'imoprter', :plugin => 'redmine_user_import' %>
 <% end %>
 
-<h2><%= t(:label_match_columns) %></h2>
+<%= title [l(:label_user_plural), users_path], [l(:user_import), {:action => :index}], l(:label_match_columns) %>
 <%= form_tag({:action => 'result'}) do %>
     <fieldset class="box"><legend><%= t(:label_match_select) %></legend>
     <% @headers.each do |column| %>
+         <% matched = ''
+           @attrs.each do |k,v| if v.to_s.casecmp(column.to_s.sub(" ") {|sp| "_" }) == 0 or k.to_s.casecmp(column.to_s) == 0 then matched = v end end
+           %>
          <label class="tabular"><%= column %>:
-         <%= select_tag "fields_map[#{column}]", options_for_select( @attrs ) %></label>
+         <%= select_tag "fields_map[#{column}]", raw("<option value=''>#{l(:option_ignore)}</option>") + options_for_select( @attrs, matched ) %></label>
     <% end %>
     </fieldset>
 

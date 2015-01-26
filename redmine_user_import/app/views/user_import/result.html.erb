@@ -3,13 +3,23 @@
     <%= stylesheet_link_tag 'imoprter', :plugin => 'redmine_user_import' %>
 <% end %>
 
-<h2><%= t(:label_import_result) %></h2>
+<%= title [l(:label_user_plural), users_path], [l(:user_import), {:action => :index}], l(:label_import_result) %>
 <p><%= t(:label_result_notice, { :upload_count => @handle_count, :success_count => @handle_count - @failed_count } ) %></p>
+
+<% if not @messages.empty? %>
+  <hr/>
+  <h3><%= l(:label_result_messages) %></h3>
+  <ul>
+  <% @messages.each do |m| %>
+    <li><%= m %></li>
+  <% end %>
+  </ul>
+<% end %>
 
 <hr/>
 
 <% if @failed_count > 0 %>
-  <%= t(:label_result_failed, { :failed_count => @failed_count } ) %>
+  <h3><%= t(:label_result_failed, { :failed_count => @failed_count } ) %></h3>
 <table class="list">
     <thead><tr>
         <th>#</th>
