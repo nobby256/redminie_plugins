@@ -14,7 +14,13 @@ class ParkingLotChartController < ApplicationController
       @today = Date.today
     end
     versions = find_versions
-    @chart_data = []
+    @chart_data = create_chart_data(versions)
+    versions = find_no_effectvie_date_versions
+    @no_effective_chart_data = create_chart_data(versions)
+  end
+
+  def create_chart_data(versions)
+    result_data = []
     versions.each do |version|
       data = ParkingLotChartData.new
       data.id = version.id
@@ -45,8 +51,9 @@ class ParkingLotChartController < ApplicationController
       end
       data.open_issues_pourcent = calc_open_issues_pourcent(version.id, version.estimated_hours)
       data.closed_issues_pourcent = 100 - data.open_issues_pourcent
-      @chart_data.push(data)
+      result_data.push(data)
     end
+    return result_data
   end
 
   def calc_open_issues_pourcent(version_id, total_hours)
