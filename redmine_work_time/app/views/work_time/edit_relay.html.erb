@@ -4,7 +4,6 @@
 <%= @message.html_safe %>
 <div class="contextual">
 <%= render :partial=>'select_project' %>
-[<%= link_to(l(:wt_each_member_report), @link_params.merge(:action=>"show")) %>]
 [<%= link_to(l(:wt_raw_total), @link_params.merge(:action=>"total")) %>]
 [<%= link_to(l(:wt_relay_total), @link_params.merge(:action=>"relay_total")) %>]
 </div>
@@ -167,7 +166,6 @@
                :onclick => "set_ticket_relay_by_issue_relation('#{url_for(:action=>'ajax_relay', :parent_id=>-1)}')".html_safe}) %>
 <div class="contextual">
 <%= render :partial=>'select_project' %>
-[<%= link_to(l(:wt_each_member_report), @link_params.merge(:action=>"show")) %>]
 [<%= link_to(l(:wt_raw_total), @link_params.merge(:action=>"total")) %>]
 [<%= link_to(l(:wt_relay_total), @link_params.merge(:action=>"relay_total")) %>]
 </div>
