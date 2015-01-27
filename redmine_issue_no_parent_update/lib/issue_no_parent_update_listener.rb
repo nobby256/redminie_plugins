@@ -5,11 +5,7 @@ class IssueNoParentUpdateListener < Redmine::Hook::ViewListener
     unless issue.id
       return #新規
     end
-    unless issue.tracker.is_in_roadmap
-      return #ロードマップに表示しないチケットはデフォルト挙動
-    end
     
-    #ロードマップに表示するチケットの場合のみ、
     #開始日/期日/優先度を子供の有無を問わず変更可能とする
     
     html = <<-"SCRIPT"
@@ -40,6 +36,13 @@ $(function() {
   if(typeof attr !== typeof undefined && attr !== false) {
     elm.removeAttr('disabled');
     elm.datepicker(datepickerOptions);
+  }
+
+  //estimated_hours
+  elm = $('#estimated_hours');
+  attr = elm.attr('disabled');
+  if(typeof attr !== typeof undefined && attr !== false) {
+    elm.removeAttr('disabled');
   }
 });
 //]]>

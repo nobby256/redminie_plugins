@@ -1,3 +1,14 @@
+class Issue < ActiveRecord::Base
+    def is_task?
+p "is_task?=" + (self.tracker_id == 6).to_s
+      return self.tracker_id == 6
+    end
+    def is_story?
+p "is_story?=" + (self.tracker_id == 2).to_s
+      return self.tracker_id == 2
+    end
+end
+
 module IssueNoParentUpdatePatch
   def self.included(base) # :nodoc:
     base.send(:include, InstanceMethods)
@@ -7,6 +18,7 @@ module IssueNoParentUpdatePatch
 
       #親/自分/子供の間でバージョンのつじつまを合わせる
       before_save :copy_fixed_version_id_to_children
+      before_save :copy_estimated_hours_to_remaining_hours
       
       #親チケットの開始日/期日/優先度を独自に変更可能にする
       alias_method_chain :recalculate_attributes_for, :no_update
@@ -35,23 +47,17 @@ module IssueNoParentUpdatePatch
       end
     end
 
+    def copy_estimated_hours_to_remaining_hours
+      #新規作成、かつ、予定工数がTRUEかつ、残工数がFALSEの場合
+      if new_record? && estimated_hours && !remaining_hours
+p "111"      
+        remaining_hours = estimated_hours
+      end
+p "222"
+    end
+
     def recalculate_attributes_for_with_no_update(issue_id)
       if issue_id && p = Issue.find_by_id(issue_id)
-
-        #ロードマップに表示しないトラッカーのみ開始日/期日/優先度が子チケットの集計値となる
-        unless p.tracker.is_in_roadmap
-          # priority = highest priority of children
-          if priority_position = p.children.joins(:priority).maximum("#{IssuePriority.table_name}.position")
-            p.priority = IssuePriority.find_by_position(priority_position)
-          end
-
-          # start/due dates = lowest/highest dates of children
-          p.start_date = p.children.minimum(:start_date)
-          p.due_date = p.children.maximum(:due_date)
-          if p.start_date && p.due_date && p.due_date < p.start_date
-            p.start_date, p.due_date = p.due_date, p.start_date
-          end
-        end
 
         # done ratio = weighted average ratio of leaves
         unless Issue.use_status_for_done_ratio? && p.status && p.status.default_done_ratio
@@ -69,9 +75,9 @@ module IssueNoParentUpdatePatch
           end
         end
 
-        # estimate = sum of leaves estimates
-        p.estimated_hours = p.leaves.sum(:estimated_hours).to_f
-        p.estimated_hours = nil if p.estimated_hours == 0.0
+        # remaining = sum of leaves remainings
+        p.remaining_hours = p.leaves.sum(:remaining_hours).to_f
+        p.remaining_hours = nil if p.remaining_hours == 0.0
 
         # ancestors will be recursively updated
         p.save(:validate => false)
@@ -107,13 +113,9 @@ module IssueNoParentUpdatePatch
       return if attrs.empty?
 
       unless leaf?
-        #チケットツリーの末端でない場合でも、ロードマップに表示するトラッカーの場合に限り開始日/期日/優先度が編集可能
-        tr = Tracker.find(self.tracker_id)
-        unless tr.is_in_roadmap
-          attrs.reject! {|k,v| %w(priority_id done_ratio start_date due_date estimated_hours).include?(k)}
-        else
-          attrs.reject! {|k,v| %w(done_ratio estimated_hours).include?(k)}
-        end
+        #チケットツリーの末端でない場合は、進捗率と残工数は変更できない
+        #逆に通常変更できないはずの開始日/期日/予定工数はいつでも変更可能
+        attrs.reject! {|k,v| %w(done_ratio remaining_hours).include?(k)}
       end
 
       if attrs['parent_issue_id'].present?

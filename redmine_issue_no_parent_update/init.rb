@@ -1,4 +1,6 @@
 require_dependency 'issue_no_parent_update_patch'
+require_dependency 'issue_no_parent_update_listener'
+require_dependency 'issue_remaining_hours_listener'
 
 Rails.configuration.to_prepare do
   require_dependency 'issue'
