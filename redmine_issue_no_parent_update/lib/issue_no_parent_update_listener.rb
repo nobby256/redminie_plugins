@@ -39,7 +39,7 @@ $(function() {
   }
 
   //estimated_hours
-  elm = $('#estimated_hours');
+  elm = $('#issue_estimated_hours');
   attr = elm.attr('disabled');
   if(typeof attr !== typeof undefined && attr !== false) {
     elm.removeAttr('disabled');

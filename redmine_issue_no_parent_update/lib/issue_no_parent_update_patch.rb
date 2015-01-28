@@ -1,13 +1,4 @@
-class Issue < ActiveRecord::Base
-    def is_task?
-p "is_task?=" + (self.tracker_id == 6).to_s
-      return self.tracker_id == 6
-    end
-    def is_story?
-p "is_story?=" + (self.tracker_id == 2).to_s
-      return self.tracker_id == 2
-    end
-end
+# coding: utf-8
 
 module IssueNoParentUpdatePatch
   def self.included(base) # :nodoc:
@@ -48,12 +39,19 @@ module IssueNoParentUpdatePatch
     end
 
     def copy_estimated_hours_to_remaining_hours
-      #新規作成、かつ、予定工数がTRUEかつ、残工数がFALSEの場合
-      if new_record? && estimated_hours && !remaining_hours
-p "111"      
-        remaining_hours = estimated_hours
+      #新規作成時は画面では残工数の入力項目を非表示にしている為、
+      #画面から入力した場合は残工数が!nilという状況は生まれない。
+      #しかし、Import系のプラグインによって直接モデルを生成された
+      #場合はその限りではない。
+      #そのケースに限っては、もし残工数に値が入っていたのであれば
+      #その値を有効値として利用する
+      if new_record?
+        if self.estimated_hours
+          if !self.remaining_hours
+            self.remaining_hours = self.estimated_hours
+          end
+        end
       end
-p "222"
     end
 
     def recalculate_attributes_for_with_no_update(issue_id)
