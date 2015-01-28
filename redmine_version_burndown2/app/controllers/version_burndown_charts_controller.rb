@@ -1,3 +1,5 @@
+# coding: utf-8
+
 class VersionBurndownChartsController < ApplicationController
   unloadable
   menu_item :version_burndown_charts
@@ -51,7 +53,7 @@ class VersionBurndownChartsController < ApplicationController
       end
       estimated_data_array << round(index_estimated_hours -= calc_estimated_hours_by_date(index_date))
       index_performance_hours = calc_performance_hours_by_date(index_date)
-      performance_data_array << round(@estimated_hours - index_performance_hours)
+      performance_data_array << round(index_performance_hours)
       perfect_data_array << 0
       upper_data_array << 0
       lower_data_array << 0
@@ -122,60 +124,83 @@ class VersionBurndownChartsController < ApplicationController
   end
 
   def calc_estimated_hours_by_date(target_date)
-    target_issues = @version_issues.select { |issue| issue.due_date == target_date}
+    target_issues = @estimated_issues.select { |issue| issue.due_date == target_date}
     target_hours = 0
     target_issues.each do |issue|
-      next unless is_leaf(issue)
       target_hours += round(issue.estimated_hours)
     end
     logger.debug("#{target_date} estimated hours = #{target_hours}")
     return target_hours
   end
 
+  #指定日の時点でのバージョン内の総残工数を求めます
   def calc_performance_hours_by_date(target_date)
     target_hours = 0
     @version_issues.each do |issue|
-      next unless is_leaf(issue)
       target_hours += calc_issue_performance_hours_by_date(target_date, issue)
     end
-    logger.debug("issues estimated hours #{target_hours} #{target_date}")
+    logger.debug("issues remaining hours #{target_hours} #{target_date}")
+p "issues remaining hours #{target_hours} #{target_date}"
     return target_hours
   end
 
+  #指定日の時点での特定チケットの残工数を求めます
   def calc_issue_performance_hours_by_date(target_date, issue)
-    journals = issue.journals.select {|journal| (journal.created_on.to_date <= target_date)}
-    if journals.empty?
-      return 0
-    end
+    sql = <<"QUERY"
+select
+  t2.value as value
+  , t2.old_value as old_value
+  , t1.created_on as created_on
+from
+  ( 
+    select
+      * 
+    from
+      journals 
+    where
+      journalized_id = :issue_id 
+      and journalized_type = 'Issue' 
+  ) as t1 join ( 
+    select
+      * 
+    from
+      journal_details 
+    where
+      property = 'attr' 
+      and prop_key = 'remaining_hours'
+  ) as t2 
+    on t1.id = t2.journal_id 
+order by
+  t1.created_on asc
+QUERY
+    results = Journal.find_by_sql([sql, {:issue_id => issue.id}]);
 
-    journal_details =
-      journals.map(&:details).flatten.select {|detail| 'status_id' == detail.prop_key}
-
-    journal_details.each do |journal_detail|
-      logger.debug("journal_detail id #{journal_detail.id}")
-      @closed_statuses.each do |closed_status|
-        logger.debug("closed_status id #{closed_status.id}")
-        if journal_detail.value.to_i == closed_status.id
-          logger.debug("#{target_date} id #{issue.id}, issue.estimated_hours #{issue.estimated_hours}")
-          return round(issue.estimated_hours)
-        end
+    #ここ以降はcreated_onの昇順でソートされている前提の処理
+    less_eq_result = nil #指定の日以下の最終レコード
+    greater_result = nil #指定の日を超えた直後のレコード
+    results.each do |result|
+      less_eq_result = result
+      if result.created_on > target_date
+        greater_result = result
+        break
       end
     end
-
-    journal_details_done_ratio =
-      journals.map(&:details).flatten.select {|detail| 'done_ratio' == detail.prop_key}
-    if journal_details_done_ratio.empty?
-      return 0
+    if less_eq_result.nil? && greater_result.nil?
+      #変更履歴がゼロの場合
+      #チケットの残工数は一度も変更されていない
+      remaining_hours_by_date = issue.remaining_hours
+    elsif !less_eq_result.nil?
+      #対象の日依然の履歴が発見できた場合
+      remaining_hours_by_date = less_eq_result.value
+    elsif less_eq_result.nil? && !greater_result.nil?
+      #対象の日より前に修正が一度も行われていなかった場合
+      #対象の日より後に変更が行われているはずなので、変更前の値を採用
+      remaining_hours_by_date = greater_result.old_value
     end
-
-    target_hours = 0
-    journal_details_done_ratio.each do |journal_detail|
-      logger.debug("#{target_date} id #{issue.id}, journal_detail id #{journal_detail.id}, done_ratio #{journal_detail.old_value} -> #{journal_detail.value}")
-      target_hours += round(issue.estimated_hours * (journal_detail.value.to_i - journal_detail.old_value.to_i) / 100)
+    unless remaining_hours_by_date
+      remaining_hours_by_date = 0.0
     end
-
-    logger.debug("#{target_date} id #{issue.id}, whole #{issue.estimated_hours}, done #{target_hours}")
-    return target_hours
+    return remaining_hours_by_date.to_f
   end
 
   def round(value)
@@ -233,12 +258,11 @@ class VersionBurndownChartsController < ApplicationController
   end
 
   def find_version_issues
+    #末端（leaf）のチケットのみを収集
     @version_issues = Issue.find_by_sql([
-          "select t1.* from issues t1 join 
-                             (select * from issues where fixed_version_id = :version_id and exists (select * from trackers where issues.tracker_id=trackers.id and trackers.is_in_roadmap=1)) t2
-                           on (t1.lft between t2.lft and t2.rgt) and (t1.rgt between t2.lft and t2.rgt)
-                             where t1.fixed_version_id = :version_id and t1.start_date is not NULL and
-                                   t1.estimated_hours is not NULL order by t1.start_date asc",
+          "select * from issues
+             where fixed_version_id = :version_id and
+               remaining_hours is not NULL and (rgt - lft) = 1",
                  {:version_id => @version.id}])
     if @version_issues.empty?
       flash[:error] = l(:version_burndown_charts_issues_not_found, :version_name => @version.name)
@@ -263,13 +287,16 @@ class VersionBurndownChartsController < ApplicationController
   def find_version_info
     @closed_pourcent = (@version.closed_pourcent * 100).round / 100
     @open_pourcent = 100 - @closed_pourcent
-    roadmap_issues = Issue.find_by_sql([
-          "select sum(estimated_hours) as roadmap_estimated_hours from issues
+    @estimated_issues = Issue.find_by_sql([
+          "select * from issues
               where fixed_version_id = :version_id and 
                     exists (select * from trackers where issues.tracker_id=trackers.id and trackers.is_in_roadmap=1) and
-                    start_date is not NULL and estimated_hours is not NULL",
+                    start_date is not NULL and estimated_hours is not NULL and parent_id is NULL",
                  {:version_id => @version.id}])
-    @estimated_hours = round(roadmap_issues.first.roadmap_estimated_hours.to_f)
+    @estimated_hours = 0
+    @estimated_issues.each do |issue|
+      @estimated_hours += round(issue.estimated_hours)
+    end
     if @estimated_hours == 0
       flash[:error] = l(:version_burndown_charts_issues_start_date_or_estimated_date_not_found, :version_name => @version.name)
       render :action => "index" and return false
