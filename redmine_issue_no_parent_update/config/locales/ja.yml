@@ -1,0 +1,3 @@
+# Japanease strings go here for Rails i18n
+ja:
+  field_remaining_hours: "残工数"
