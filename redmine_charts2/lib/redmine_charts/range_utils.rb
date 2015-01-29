@@ -184,7 +184,7 @@ module RedmineCharts
 
     def self.subtract_month(current, offset)
       date = date_from_month(current) - offset.months
-      [date.strftime("%Y0%m"), date.strftime("%b %y")]
+      [date.strftime("%Y0%m"), date.strftime("%Y/%m")]
     end
 
     def self.subtract_week(current, offset)
@@ -195,21 +195,21 @@ module RedmineCharts
       date -= ((date.strftime("%w").to_i + 6) % 7).days
 
       day_from = date.strftime("%d").to_i
-      month_from = date.strftime("%b")
-      year_from = date.strftime("%y")
+      month_from = date.strftime("%m")
+      year_from = date.strftime("%Y")
 
       date += 6.days
 
       day_to = date.strftime("%d").to_i
-      month_to = date.strftime("%b")
-      year_to = date.strftime("%y")
+      month_to = date.strftime("%m")
+      year_to = date.strftime("%Y")
 
       if year_from != year_to
-        label = "#{day_from} #{month_from} #{year_from} - #{day_to} #{month_to} #{year_to}"
+        label = "#{year_from}/#{month_from}/#{day_from} - #{year_to}/#{month_to}/#{day_to}"
       elsif month_from != month_to
-        label = "#{day_from} #{month_from} - #{day_to} #{month_to} #{year_from}"
+        label = "#{month_from}/#{day_from} - #{year_from}/#{month_to}/#{day_to}"
       else
-        label = "#{day_from} - #{day_to} #{month_from} #{year_from}"
+        label = "#{day_from} - #{year_from}/#{month_from}/#{day_to}"
       end
 
       [key, label]
@@ -220,7 +220,7 @@ module RedmineCharts
 
       key = "%d%03d" % [date.year, date.yday]
 
-      [key, date.strftime("%d %b %y")]
+      [key, date.strftime("%Y/%m/%d")]
     end
 
   end
