@@ -124,7 +124,7 @@ class VersionBurndownChartsController < ApplicationController
   end
 
   def calc_estimated_hours_by_date(target_date)
-    target_issues = @estimated_issues.select { |issue| issue.due_date == target_date}
+    target_issues = @version_issues.select { |issue| issue.due_date == target_date}
     target_hours = 0
     target_issues.each do |issue|
       target_hours += round(issue.estimated_hours)
@@ -133,74 +133,49 @@ class VersionBurndownChartsController < ApplicationController
     return target_hours
   end
 
-  #指定日の時点でのバージョン内の総残工数を求めます
   def calc_performance_hours_by_date(target_date)
     target_hours = 0
     @version_issues.each do |issue|
       target_hours += calc_issue_performance_hours_by_date(target_date, issue)
     end
-    logger.debug("issues remaining hours #{target_hours} #{target_date}")
-p "issues remaining hours #{target_hours} #{target_date}"
+    logger.debug("issues estimated hours #{target_hours} #{target_date}")
     return target_hours
   end
 
-  #指定日の時点での特定チケットの残工数を求めます
   def calc_issue_performance_hours_by_date(target_date, issue)
-    sql = <<"QUERY"
-select
-  t2.value as value
-  , t2.old_value as old_value
-  , t1.created_on as created_on
-from
-  ( 
-    select
-      * 
-    from
-      journals 
-    where
-      journalized_id = :issue_id 
-      and journalized_type = 'Issue' 
-  ) as t1 join ( 
-    select
-      * 
-    from
-      journal_details 
-    where
-      property = 'attr' 
-      and prop_key = 'remaining_hours'
-  ) as t2 
-    on t1.id = t2.journal_id 
-order by
-  t1.created_on asc
-QUERY
-    results = Journal.find_by_sql([sql, {:issue_id => issue.id}]);
+    journals = issue.journals.select {|journal| (journal.created_on.to_date <= target_date)}
+    if journals.empty?
+      return 0
+    end
 
-    #ここ以降はcreated_onの昇順でソートされている前提の処理
-    less_eq_result = nil #指定の日以下の最終レコード
-    greater_result = nil #指定の日を超えた直後のレコード
-    results.each do |result|
-      less_eq_result = result
-      if result.created_on > target_date
-        greater_result = result
-        break
+    journal_details =
+      journals.map(&:details).flatten.select {|detail| 'status_id' == detail.prop_key}
+
+    journal_details.each do |journal_detail|
+      logger.debug("journal_detail id #{journal_detail.id}")
+      @closed_statuses.each do |closed_status|
+        logger.debug("closed_status id #{closed_status.id}")
+        if journal_detail.value.to_i == closed_status.id
+          logger.debug("#{target_date} id #{issue.id}, issue.estimated_hours #{issue.estimated_hours}")
+          return round(issue.remaining_hours)
+        end
       end
     end
-    if less_eq_result.nil? && greater_result.nil?
-      #変更履歴がゼロの場合
-      #チケットの残工数は一度も変更されていない
-      remaining_hours_by_date = issue.remaining_hours
-    elsif !less_eq_result.nil?
-      #対象の日依然の履歴が発見できた場合
-      remaining_hours_by_date = less_eq_result.value
-    elsif less_eq_result.nil? && !greater_result.nil?
-      #対象の日より前に修正が一度も行われていなかった場合
-      #対象の日より後に変更が行われているはずなので、変更前の値を採用
-      remaining_hours_by_date = greater_result.old_value
+
+    journal_details_remaining_hours =
+      journals.map(&:details).flatten.select {|detail| 'remaining_hours' == detail.prop_key}
+    if journal_details_remaining_hours.empty?
+      return 0
     end
-    unless remaining_hours_by_date
-      remaining_hours_by_date = 0.0
+
+    target_hours = 0
+    journal_details_remaining_hours.each do |journal_detail|
+      logger.debug("#{target_date} id #{issue.id}, journal_detail id #{journal_detail.id}, done_ratio #{journal_detail.old_value} -> #{journal_detail.value}")
+      target_hours += journal_detail.old_value.to_i - journal_detail.value.to_i
     end
-    return remaining_hours_by_date.to_f
+
+    logger.debug("#{target_date} id #{issue.id}, whole #{issue.estimated_hours}, done #{target_hours}")
+    return target_hours
   end
 
   def round(value)
@@ -262,7 +237,7 @@ QUERY
     @version_issues = Issue.find_by_sql([
           "select * from issues
              where fixed_version_id = :version_id and
-               remaining_hours is not NULL and (rgt - lft) = 1",
+               estimated_hours is not NULL and (rgt - lft) = 1",
                  {:version_id => @version.id}])
     if @version_issues.empty?
       flash[:error] = l(:version_burndown_charts_issues_not_found, :version_name => @version.name)
@@ -287,20 +262,11 @@ QUERY
   def find_version_info
     @closed_pourcent = (@version.closed_pourcent * 100).round / 100
     @open_pourcent = 100 - @closed_pourcent
-    @estimated_issues = Issue.find_by_sql([
-          "select * from issues
-              where fixed_version_id = :version_id and 
-                    exists (select * from trackers where issues.tracker_id=trackers.id and trackers.is_in_roadmap=1) and
-                    start_date is not NULL and estimated_hours is not NULL and parent_id is NULL",
-                 {:version_id => @version.id}])
-    @estimated_hours = 0
-    @estimated_issues.each do |issue|
-      @estimated_hours += round(issue.estimated_hours)
-    end
-    if @estimated_hours == 0
+    unless @version.estimated_hours
       flash[:error] = l(:version_burndown_charts_issues_start_date_or_estimated_date_not_found, :version_name => @version.name)
       render :action => "index" and return false
     end
+    @estimated_hours = round(@version.estimated_hours)
     logger.debug("@estimated_hours #{@estimated_hours}")
   end
 
