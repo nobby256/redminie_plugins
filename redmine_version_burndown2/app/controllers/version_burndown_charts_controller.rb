@@ -1,3 +1,5 @@
+# coding: utf-8
+
 class VersionBurndownChartsController < ApplicationController
   unloadable
   menu_item :version_burndown_charts
@@ -51,7 +53,7 @@ class VersionBurndownChartsController < ApplicationController
       end
       estimated_data_array << round(index_estimated_hours -= calc_estimated_hours_by_date(index_date))
       index_performance_hours = calc_performance_hours_by_date(index_date)
-      performance_data_array << round(@estimated_hours - index_performance_hours)
+      performance_data_array << round(index_performance_hours)
       perfect_data_array << 0
       upper_data_array << 0
       lower_data_array << 0
@@ -125,7 +127,6 @@ class VersionBurndownChartsController < ApplicationController
     target_issues = @version_issues.select { |issue| issue.due_date == target_date}
     target_hours = 0
     target_issues.each do |issue|
-      next unless is_leaf(issue)
       target_hours += round(issue.estimated_hours)
     end
     logger.debug("#{target_date} estimated hours = #{target_hours}")
@@ -135,7 +136,6 @@ class VersionBurndownChartsController < ApplicationController
   def calc_performance_hours_by_date(target_date)
     target_hours = 0
     @version_issues.each do |issue|
-      next unless is_leaf(issue)
       target_hours += calc_issue_performance_hours_by_date(target_date, issue)
     end
     logger.debug("issues estimated hours #{target_hours} #{target_date}")
@@ -157,21 +157,21 @@ class VersionBurndownChartsController < ApplicationController
         logger.debug("closed_status id #{closed_status.id}")
         if journal_detail.value.to_i == closed_status.id
           logger.debug("#{target_date} id #{issue.id}, issue.estimated_hours #{issue.estimated_hours}")
-          return round(issue.estimated_hours)
+          return round(issue.remaining_hours)
         end
       end
     end
 
-    journal_details_done_ratio =
-      journals.map(&:details).flatten.select {|detail| 'done_ratio' == detail.prop_key}
-    if journal_details_done_ratio.empty?
+    journal_details_remaining_hours =
+      journals.map(&:details).flatten.select {|detail| 'remaining_hours' == detail.prop_key}
+    if journal_details_remaining_hours.empty?
       return 0
     end
 
     target_hours = 0
-    journal_details_done_ratio.each do |journal_detail|
+    journal_details_remaining_hours.each do |journal_detail|
       logger.debug("#{target_date} id #{issue.id}, journal_detail id #{journal_detail.id}, done_ratio #{journal_detail.old_value} -> #{journal_detail.value}")
-      target_hours += round(issue.estimated_hours * (journal_detail.value.to_i - journal_detail.old_value.to_i) / 100)
+      target_hours += journal_detail.old_value.to_i - journal_detail.value.to_i
     end
 
     logger.debug("#{target_date} id #{issue.id}, whole #{issue.estimated_hours}, done #{target_hours}")
@@ -233,12 +233,11 @@ class VersionBurndownChartsController < ApplicationController
   end
 
   def find_version_issues
+    #末端（leaf）のチケットのみを収集
     @version_issues = Issue.find_by_sql([
-          "select t1.* from issues t1 join 
-                             (select * from issues where fixed_version_id = :version_id and exists (select * from trackers where issues.tracker_id=trackers.id and trackers.is_in_roadmap=1)) t2
-                           on (t1.lft between t2.lft and t2.rgt) and (t1.rgt between t2.lft and t2.rgt)
-                             where t1.fixed_version_id = :version_id and t1.start_date is not NULL and
-                                   t1.estimated_hours is not NULL order by t1.start_date asc",
+          "select * from issues
+             where fixed_version_id = :version_id and
+               estimated_hours is not NULL and (rgt - lft) = 1",
                  {:version_id => @version.id}])
     if @version_issues.empty?
       flash[:error] = l(:version_burndown_charts_issues_not_found, :version_name => @version.name)
@@ -263,17 +262,11 @@ class VersionBurndownChartsController < ApplicationController
   def find_version_info
     @closed_pourcent = (@version.closed_pourcent * 100).round / 100
     @open_pourcent = 100 - @closed_pourcent
-    roadmap_issues = Issue.find_by_sql([
-          "select sum(estimated_hours) as roadmap_estimated_hours from issues
-              where fixed_version_id = :version_id and 
-                    exists (select * from trackers where issues.tracker_id=trackers.id and trackers.is_in_roadmap=1) and
-                    start_date is not NULL and estimated_hours is not NULL",
-                 {:version_id => @version.id}])
-    @estimated_hours = round(roadmap_issues.first.roadmap_estimated_hours.to_f)
-    if @estimated_hours == 0
+    unless @version.estimated_hours
       flash[:error] = l(:version_burndown_charts_issues_start_date_or_estimated_date_not_found, :version_name => @version.name)
       render :action => "index" and return false
     end
+    @estimated_hours = round(@version.estimated_hours)
     logger.debug("@estimated_hours #{@estimated_hours}")
   end
 

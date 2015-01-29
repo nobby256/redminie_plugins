@@ -1,0 +1,86 @@
+<% html_title(l(:charts_menu_label)) -%>
+
+<% content_for :header_tags do %>
+  <%= javascript_include_tag '/plugin_assets/open_flash_chart/javascripts/swfobject.js' %>
+  <%= javascript_include_tag '/plugin_assets/redmine_charts2/javascripts/charts.js' %>
+<% end %>
+
+
+<div class="contextual">
+  <% if @saved_condition && User.current.allowed_to?(:save_charts, @project, :global => true) %>    
+    <%= link_to l(:button_delete_condition), { :action => 'destroy_saved_condition', :project_id => @project, :id => @saved_condition.id}, :data => {:confirm => l(:text_are_you_sure)}, :method => :post, :class => 'icon icon-del' %>
+  <% end %>
+</div>
+
+<h2><%= @title %><%= " - #{@saved_condition.name}" if @saved_condition %></h2>
+<%= form_tag '#', :method => :get, :id => 'chart_form' do %>
+
+  <%= hidden_field_tag :page, @page %>
+  <%= hidden_field_tag :project_id, @project.id %>
+  <%= hidden_field_tag :saved_condition_id, @saved_condition ? @saved_condition.id : nil %>
+  <%= hidden_field_tag :chart_form_action, "", :id => "chart_form_action" %>  
+
+  <div id="query_form_content">
+
+    <% if @help %>
+      <p><%= @help %></p>
+    <% end %>
+
+    <fieldset id="filters" class="collapsible">
+      <legend onclick="toggleFieldset(this);"><%= l(:label_filter_plural) %></legend>
+      <div>
+        <%= render :partial => 'charts/filters' %>
+      </div>
+    </fieldset>
+
+  <p class="buttons">
+  <%= submit_tag l(:button_apply), :id => 'button_apply', :class => 'button-small' %>
+
+    <%= link_to l(:button_clear), {}, :class => 'icon icon-reload' %>
+
+    <% if User.current.allowed_to?(:save_charts, @project, :global => true) %>
+      <% if @saved_condition %>
+        <%= link_to l(:button_save_condition), {}, :onclick => "$('#saved_condition_create').hide(); $('#saved_condition_update').show(); return false;", :class => 'icon icon-save' %>
+        <%= link_to l(:button_save_condition_as_new), {}, :onclick => "$('#saved_condition_update').hide(); $('#saved_condition_create').show(); return false;", :class => 'icon icon-save' %>
+      <% else %>
+        <%= link_to l(:button_save_condition), {}, :onclick => "$('#saved_condition_create').show(); return false;", :class => 'icon icon-save' %>
+      <% end %>
+    <% end %>
+  </p>
+
+  <% if User.current.allowed_to?(:save_charts, @project, :global => true) %>
+    <%= render :partial => 'charts/saved_conditions' %>
+  <% end %>
+
+  <br/>
+
+  <% unless @error %>
+    <%= show_graph(@data).html_safe %>
+
+    <% if @show_pages %>
+      <div style="text-align:center;padding-top:20px">
+        <%= show_pages(@page, @pages).html_safe %>
+      </div>
+    <% end %>
+
+    <% if @date_condition %>
+      <div style="text-align:center;padding-top:20px">
+        <%= show_date_condition(@range[:limit], @range[:range], @range[:offset]).html_safe %>
+      </div>
+    <% end %>
+
+  <% end %>
+
+<% end %>
+<% content_for :sidebar do %>
+  <h3><%= l(:charts_menu_label)%> </h3>
+
+  <%= show_charts_menu.html_safe %>
+
+  <% unless @saved_conditions.empty? %>
+     <h3><%= l(:charts_saved_conditions_label)%> </h3>
+    <% @saved_conditions.each do |saved_condition| %>
+      <%= link_to(saved_condition.name, "#{url_for(:controller => "charts_#{saved_condition.chart}".to_sym, :project_id => @project)}?#{saved_condition.conditions}&saved_condition_id=#{saved_condition.id}")%> <br/>
+    <% end %>
+  <% end %>
+<% end %>
