@@ -1,0 +1,25 @@
+<%= javascript_tag do %>
+  $("#sidebar a[class*=query]").on("click", function() {
+    var href = $(this).attr("href");
+    var versionId = $("#query_with_version_fixed_version_id").val()
+    if (versionId) {
+      href += "&fixed_version_id=" + versionId;
+    }
+    location.href = href;
+    return false;
+  });
+
+  $(function() {
+    <% if @querying_version %>
+      $("#content h2").append(" (<%= j t(:field_fixed_version) %>: <%= j @querying_version.name %>)");
+    <% end %>
+  });
+<% end %>
+
+<% if @project and sidebar_queries.any? %>
+<p>
+<%= t(:field_fixed_version) %>
+<%= collection_select :query_with_version, :fixed_version_id, Version.visible.all, :id, :name,
+  {:include_blank => true, :selected => @querying_version.try(:id) || ""} %>
+</p>
+<% end %>
