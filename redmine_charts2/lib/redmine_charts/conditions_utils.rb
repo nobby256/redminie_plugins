@@ -34,7 +34,8 @@ module RedmineCharts
       conditions = {}
       
       #members = User.all.collect { |a| [a.name, a.id] }.sort { |a,b| a[0].upcase <=> b[0].upcase }
-      members = project.members.collect { |a| [a.name, a.id] }.sort { |a,b| a[0].upcase <=> b[0].upcase }
+      #members = project.members.collect { |a| [a.name, a.id] }.sort { |a,b| a[0].upcase <=> b[0].upcase }
+      members = project.members.collect { |a| [a.name, a.user_id] }.sort { |a,b| a[0].upcase <=> b[0].upcase }
 
       types.each do |type|
         case type
