@@ -8,6 +8,7 @@ module IssueNoParentUpdate
       base.class_eval do
 
         belongs_to :sub_category, :class_name => 'IssueSubCategory', :foreign_key => 'sub_category_id'
+        safe_attributes 'list_order', 'tag', 'sub_category_id', :if => lambda {|issue, user| issue.new_record? || user.allowed_to?(:edit_issues, issue.project) }
 
       end
     end

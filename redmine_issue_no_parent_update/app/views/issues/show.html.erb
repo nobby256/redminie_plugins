@@ -24,13 +24,20 @@
 <div class="subject">
 <%= render_issue_subject_with_tree(@issue) %>
 </div>
+<!-- patch begin -->
+<% if false %>
         <p class="author">
         <%= authoring @issue.created_on, @issue.author %>.
         <% if @issue.created_on != @issue.updated_on %>
         <%= l(:label_updated_time, time_tag(@issue.updated_on)).html_safe %>.
         <% end %>
         </p>
-
+<% end %>
+<p class="tag">
+<label><%= l(:label_tag) %></label>
+<%= link_to(@issue.tag, project_issues_path(@project, :set_filter => 1, :tag => @issue.tag), :class => 'tag') if @issue.tag %>
+</p>
+<!-- patch end -->
 <table class="attributes">
 <%= issue_fields_rows do |rows|
   rows.left l(:field_status), h(@issue.status.name), :class => 'status'
@@ -42,11 +49,11 @@
   unless @issue.disabled_core_fields.include?('category_id')
     rows.left l(:field_category), h(@issue.category ? @issue.category.name : "-"), :class => 'category'
   end
-<!-- patch begin -->
+# patch begin
   unless @issue.disabled_core_fields.include?('sub_category_id')
     rows.left l(:field_sub_category), h(@issue.sub_category ? @issue.sub_category.name : "-"), :class => 'sub-category'
   end
-<!-- patch end -->
+# patch end
   unless @issue.disabled_core_fields.include?('fixed_version_id')
     rows.left l(:field_fixed_version), (@issue.fixed_version ? link_to_version(@issue.fixed_version) : "-"), :class => 'fixed-version'
   end
