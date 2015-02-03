@@ -1,0 +1,28 @@
+<% if @project.issue_sub_categories.any? %>
+<table class="list">
+  <thead><tr>
+    <th><%= l(:label_sub_issue_category) %></th>
+    <th><%= l(:field_position) %></th>
+    <th></th>
+  </tr></thead>
+  <tbody>
+<% for sub_category in @project.issue_sub_categories %>
+  <% unless sub_category.new_record? %>
+  <tr class="<%= cycle 'odd', 'even' %>">
+    <td class="name"><%=h(sub_category.name) %></td>
+    <td class="buttons">
+      <% if User.current.allowed_to?(:manage_sub_categories, @project) %>
+        <%= link_to l(:button_edit), edit_issue_sub_category_path(sub_category), :class => 'icon icon-edit' %>
+        <%= delete_link issue_sub_category_path(sub_category) %>
+      <% end %>
+    </td>
+  </tr>
+  <% end %>
+<% end %>
+    </tbody>
+</table>
+<% else %>
+<p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>
+
+<p><%= link_to l(:label_issue_sub_category_new), new_project_issue_sub_category_path(@project), :class => 'icon icon-add' if User.current.allowed_to?(:manage_sub_categories, @project) %></p>

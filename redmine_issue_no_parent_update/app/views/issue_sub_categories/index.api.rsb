@@ -1,0 +1,10 @@
+api.array :issue_sub_categories, api_meta(:total_count => @sub_categories.size) do
+  @sub_categories.each do |sub_category|
+    api.issue_sub_category do
+      api.id sub_category.id
+      api.project(:id => sub_category.project_id, :name => sub_category.project.name) unless sub_category.project.nil?
+      api.name sub_category.name
+      api.position sub_category.position
+    end
+  end
+end
