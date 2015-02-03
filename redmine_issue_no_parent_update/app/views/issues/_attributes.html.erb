@@ -3,7 +3,7 @@
 <div class="splitcontent">
 <div class="splitcontentleft">
 <!-- patch begin -->
-<% if @issue.safe_attribute? 'priority_id' %>
+<% if @issue.safe_attribute? 'tag' %>
 <p id="tag"><%= f.text_field :tag, :size => 10 %></p>
 <% end %>
 <!-- patch end -->

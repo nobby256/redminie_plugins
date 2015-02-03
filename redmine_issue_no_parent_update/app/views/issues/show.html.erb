@@ -33,10 +33,12 @@
         <% end %>
         </p>
 <% end %>
+<% if @issue.tag %>
 <p class="tag">
 <label><%= l(:label_tag) %></label>
 <%= link_to(@issue.tag, project_issues_path(@project, :set_filter => 1, :tag => @issue.tag), :class => 'tag') if @issue.tag %>
 </p>
+<% end %>
 <!-- patch end -->
 <table class="attributes">
 <%= issue_fields_rows do |rows|

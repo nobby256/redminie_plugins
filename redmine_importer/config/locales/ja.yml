@@ -15,6 +15,7 @@ ja:
   label_default_tracker: "デフォルトのトラッカー:"
   label_importer_send_emails: "メールを送信する"
   label_importer_add_categories: "新しいカテゴリを自動的に追加"
+  label_importer_add_sub_categories: "新しいサブカテゴリを自動的に追加"
   label_importer_add_versions: "新しい対象バージョンを自動的に追加"
   label_importer_use_anonymous: "未登録のユーザーは匿名ユーザーに置き換える"
   label_update_issue: "存在するチケットを更新:"
