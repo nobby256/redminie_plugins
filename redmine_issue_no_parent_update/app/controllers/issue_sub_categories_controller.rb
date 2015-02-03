@@ -10,7 +10,7 @@ class IssueSubCategoriesController < ApplicationController
   def index
     respond_to do |format|
       format.html { redirect_to_settings_in_projects }
-      format.api { @sub_categories = @project.issue_sub_categories.all }
+      format.api { @sub_categories = @project.issue_sub_categories.order('position').all }
     end
   end
 
