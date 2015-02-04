@@ -1,3 +1,17 @@
 # Japanease strings go here for Rails i18n
 ja:
-  field_remaining_hours: "残工数"
+  field_tag: "タグ"
+  field_sub_category: "サブカテゴリ"
+  field_external_id: "外部ID"
+  field_external_order: "外部の順序"
+  
+  permission_manage_sub_categories: チケットのサブカテゴリの管理
+  
+  label_issue_sub_category: チケットのサブカテゴリ
+  label_issue_sub_category_plural: チケットのサブカテゴリ
+  label_issue_sub_category_new: "新しいサブカテゴリ"
+
+  text_issue_sub_category_destroy_question: "%{count}件のチケットがこのサブカテゴリに割り当てられています。"
+  text_issue_sub_category_destroy_assignments: サブカテゴリの割り当てを削除する
+  text_issue_sub_category_reassign_to: チケットをこのサブカテゴリに再割り当てする
+  description_issue_category_reassign: 新しいサブカテゴリを選択してください

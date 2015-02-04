@@ -1,0 +1,3 @@
+hideModal();
+<% select = content_tag('select', content_tag('option') + options_from_collection_for_select(@project.issue_sub_categories, 'id', 'name', @sub_category.id), :id => 'issue_sub_category_id', :name => 'issue[sub_category_id]') %>
+$('#issue_sub_category_id').replaceWith('<%= escape_javascript(select) %>');

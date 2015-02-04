@@ -1,0 +1,16 @@
+<h2><%=l(:label_issue_sub_category)%>: <%=h @sub_category.name %></h2>
+
+<%= form_tag(issue_sub_category_path(@sub_category), :method => :delete) do %>
+<div class="box">
+<p><strong><%= l(:text_issue_sub_category_destroy_question, @issue_count) %></strong></p>
+<p><label><%= radio_button_tag 'todo', 'nullify', true %> <%= l(:text_issue_sub_category_destroy_assignments) %></label><br />
+<% if @sub_categories.size > 0 %>
+<label><%= radio_button_tag 'todo', 'reassign', false %> <%= l(:text_issue_sub_category_reassign_to) %></label>:
+<%= label_tag "reassign_to_id", l(:description_issue_sub_category_reassign), :class => "hidden-for-sighted" %>
+<%= select_tag 'reassign_to_id', options_from_collection_for_select(@sub_categories, 'id', 'name') %></p>
+<% end %>
+</div>
+
+<%= submit_tag l(:button_apply) %>
+<%= link_to l(:button_cancel), :controller => 'projects', :action => 'settings', :id => @project, :tab => 'sub_categories' %>
+<% end %>
