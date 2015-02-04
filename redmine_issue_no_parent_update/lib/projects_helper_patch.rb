@@ -21,7 +21,7 @@ module IssueNoParentUpdate
         action = {:name => 'sub_categories', 
           :controller => 'issue_sub_categories',
           :action => :index, 
-          :partial => 'projects/settings/issue_sub_categories', :label => :label_issue_sub_categories}
+          :partial => 'projects/settings/issue_sub_categories', :label => :label_issue_sub_category_plural}
         tabs << action if User.current.allowed_to?(:manage_categories, @project)
         tabs
       end
