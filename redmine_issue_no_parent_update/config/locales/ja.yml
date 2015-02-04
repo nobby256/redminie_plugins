@@ -2,7 +2,8 @@
 ja:
   field_tag: "タグ"
   field_sub_category: "サブカテゴリ"
-  field_list_order: "一覧順"
+  field_external_id: "外部ID"
+  field_external_order: "外部の順序"
   
   permission_manage_sub_categories: チケットのサブカテゴリの管理
   

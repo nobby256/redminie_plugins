@@ -22,7 +22,7 @@ class ImporterController < ApplicationController
   ISSUE_ATTRS = [:id, :subject, :assigned_to, :fixed_version,
     :author, :description, :category, :priority, :tracker, :status,
     :start_date, :due_date, :done_ratio, :estimated_hours,
-    :parent_issue, :watchers, :sub_category, :tag, :list_order ]
+    :parent_issue, :watchers, :sub_category, :tag, :external_id, :external_order ]
   
   def index
   end
@@ -319,7 +319,8 @@ class ImporterController < ApplicationController
         fixed_version_id = fixed_version_name.blank? ? nil : version_id_for_name!(project,fixed_version_name,add_versions)
         watchers = row[attrs_map["watchers"]]
         tag = row[attrs_map["tag"]].blank? ? nil : row[attrs_map["tag"]].strip
-        list_order = row[attrs_map["list_order"]].blank? ? nil : row[attrs_map["list_order"]].strip
+        external_id = row[attrs_map["external_id"]].blank? ? nil : row[attrs_map["external_id"]].strip
+        external_order = row[attrs_map["external_order"]].blank? ? nil : row[attrs_map["external_order"]].strip
         # new issue or find exists one
         issue = Issue.new
         journal = nil
@@ -414,7 +415,8 @@ class ImporterController < ApplicationController
       issue.done_ratio = row[attrs_map["done_ratio"]].blank? ? issue.done_ratio : row[attrs_map["done_ratio"]].strip
       issue.estimated_hours = row[attrs_map["estimated_hours"]].blank? ? issue.estimated_hours : row[attrs_map["estimated_hours"]].strip
       issue.tag = row[attrs_map["tag"]].blank? ? issue.tag : row[attrs_map["tag"]].blank?.strip
-      issue.list_order = row[attrs_map["list_order"]].blank? ? issue.list_order : row[attrs_map["list_order"]].strip
+      issue.external_id = row[attrs_map["external_id"]].blank? ? issue.external_id : row[attrs_map["external_id"]].strip
+      issue.external_order = row[attrs_map["external_order"]].blank? ? issue.external_order : row[attrs_map["external_order"]].strip
 
       # parent issues
       begin

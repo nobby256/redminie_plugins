@@ -16,7 +16,7 @@ module IssueNoParentUpdate
 
         base.add_available_column(QueryColumn.new(:tag, sortable: "#{Issue.table_name}.tag", groupable: true, caption: :field_tag))
         base.add_available_column(QueryColumn.new(:sub_category_id, sortable: "#{IssueSubCategory.table_name}.position", groupable: true, caption: :field_sub_category))
-        base.add_available_column(QueryColumn.new(:list_order, sortable: "#{Issue.table_name}.list_order", groupable: false, caption: :field_list_order))
+        base.add_available_column(QueryColumn.new(:external_order, sortable: "#{Issue.table_name}.external_order", groupable: false, caption: :field_external_order))
       end
     end
 
