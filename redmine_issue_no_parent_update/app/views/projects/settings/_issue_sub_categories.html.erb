@@ -13,7 +13,7 @@
     <td class="buttons">
       <% if User.current.allowed_to?(:manage_sub_categories, @project) %>
         <%= link_to l(:button_edit), edit_issue_sub_category_path(sub_category), :class => 'icon icon-edit' %>
-        <%= reorder_links('issue_sub_category', {:action => 'update', :id => status}, :put) %>
+        <%= reorder_links('issue_sub_category', {:controller => 'issue_sub_categories', :action => 'update', :id => sub_category}, :put) %>
         <%= delete_link issue_sub_category_path(sub_category) %>
       <% end %>
     </td>

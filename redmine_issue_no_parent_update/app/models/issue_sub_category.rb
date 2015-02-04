@@ -2,12 +2,13 @@ class IssueSubCategory < ActiveRecord::Base
   include Redmine::SafeAttributes
   belongs_to :project
   has_many :issues, :foreign_key => 'sub_category_id', :dependent => :nullify
+  acts_as_list :scope => :project
 
   validates_presence_of :name
   validates_uniqueness_of :name, :scope => [:project_id]
   validates_length_of :name, :maximum => 30
 
-  safe_attributes 'name', 'position'
+  safe_attributes 'name', 'move_to'
 
   scope :named, lambda {|arg| where("LOWER(#{table_name}.name) = LOWER(?)", arg.to_s.strip)}
 
