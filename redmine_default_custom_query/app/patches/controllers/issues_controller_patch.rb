@@ -23,8 +23,8 @@ module DefaultCustomQuery
         params[:set_filter] = 1
       when filter_applied?
         # Nothing to do
-      when filter_cleared?
-        apply_default_query!
+#      when filter_cleared?
+#        apply_default_query!
       when session[:query]
         query_id, project_id = session[:query].values_at(:id, :project_id)
         unless query_id && (project_id == @project.id) && available_query?(query_id)
@@ -61,7 +61,8 @@ module DefaultCustomQuery
     end
 
     def filter_applied?
-      params[:set_filter] && params.key?(:op) && params.key?(:f)
+#      params[:set_filter] && params.key?(:op) && params.key?(:f)
+      params[:set_filter]
     end
 
     def filter_cleared?
