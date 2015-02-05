@@ -35,7 +35,23 @@ module LocalAvatarsPlugin
 					return "<img class=\"gravatar\" width=\"#{options[:size]}\" height=\"#{options[:size]}\" src=\"#{image_url}\" />".html_safe
 				end
 			end
-			avatar_without_local(user, options)
+			relative_url_path = ActionController::Base.respond_to?(:relative_url_root) ? ActionController::Base.relative_url_root : ActionController::AbstractRequest.relative_url_root
+			image_url = "#{relative_url_path}/plugin_assets/redmine_local_avatars/images/"
+			case Setting.gravatar_default
+				when 'wavatar' then
+					image_url += 'wavatar.png'
+				when 'identicon' then
+					image_url += 'identicon.png'
+				when 'monsterid' then
+					image_url += 'monsterid.png'
+				when 'retro' then
+					image_url += 'retro.png'
+				when 'mm' then
+					image_url += 'mm.png'
+				else
+					image_url += 'none.png'
+			end
+			return "<img class=\"gravatar\" width=\"#{options[:size]}\" height=\"#{options[:size]}\" src=\"#{image_url}\" />".html_safe
 		end
   end
 end
