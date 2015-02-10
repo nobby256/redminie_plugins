@@ -17,8 +17,8 @@ ja:
   description_issue_category_reassign: 新しいサブカテゴリを選択してください
 
 
-  field_start_date: 開始日(計画)
-  field_due_date: 終了日(計画)
+  field_start_date: 開始日(予定)
+  field_due_date: 終了日(予定)
   field_closed_on: 終了日(実績)
   field_estimated_hours: 見積工数
   label_started_on: 開始日(実績)
