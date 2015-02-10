@@ -15,3 +15,15 @@ ja:
   text_issue_sub_category_destroy_assignments: サブカテゴリの割り当てを削除する
   text_issue_sub_category_reassign_to: チケットをこのサブカテゴリに再割り当てする
   description_issue_category_reassign: 新しいサブカテゴリを選択してください
+
+
+  field_start_date: 開始日(計画)
+  field_due_date: 終了日(計画)
+  field_closed_on: 終了日(実績)
+  field_estimated_hours: 見積工数
+  label_started_on: 開始日(実績)
+  label_spent_time: 実績工数
+  label_overall_spent_time: すべての実績工数
+  
+  
+  

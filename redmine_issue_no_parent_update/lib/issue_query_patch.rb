@@ -9,6 +9,7 @@ module IssueNoParentUpdate
 
         alias_method_chain :joins_for_order_statement, :wf
         alias_method_chain :initialize_available_filters, :wf
+        alias_method_chain :issues, :wf
 
         self.available_columns.find do |query_column|
           query_column.sortable = "#{IssueCategory.table_name}.id" if query_column.name== :category
@@ -17,19 +18,37 @@ module IssueNoParentUpdate
         base.add_available_column(QueryColumn.new(:tag, sortable: "#{Issue.table_name}.tag", groupable: true, caption: :field_tag))
         base.add_available_column(QueryColumn.new(:sub_category_id, sortable: "#{IssueSubCategory.table_name}.position", groupable: true, caption: :field_sub_category))
         base.add_available_column(QueryColumn.new(:external_order, sortable: "#{Issue.table_name}.external_order", groupable: false, caption: :field_external_order))
+        base.add_available_column(QueryColumn.new(:started_on,
+                                                  :sortable => "COALESCE((SELECT MIN(created_on) FROM #{TimeEntry.table_name} WHERE #{TimeEntry.table_name}.issue_id = #{Issue.table_name}.id), 0)",
+                                                  :default_order => 'asc',
+                                                  :caption => :label_started_on
+                                                  ))
       end
     end
 
     module InstanceMethods
+
+      def issues_with_wf(options={})
+        issues = issues_without_wf(options)
+
+        if has_column?(:started_on)
+          Issue.load_visible_started_on(issues)
+        end
 =begin
-      def sql_for_tag_field(field, operator, value)
-        return sql_for_field(field, operator, value, Issue.table_name, 'tag', false)
+        if has_column?(:closed_on)
+          issues.each do |issue|
+            closed_on_value = issue.closed_on
+            if closed_on_value
+              issue.closed_on = Date.new(closed_on_value.year, closed_on_value.month, closed_on_value.day)
+            end
+          end
+        end
+=end
+        return issues
+      rescue ::ActiveRecord::StatementInvalid => e
+        raise StatementInvalid.new(e.message)
       end
 
-      def sql_for_sub_category_id_field(field, operator, value)
-        return sql_for_field(field, operator, value, Issue.table_name, 'sub_category_id', false)
-      end
-=end
       def issue_count_by_group_with_wf
         if (group_by_statement == 'tag')
           gr_b = "case when #{IssueStatus.table_name}.is_closed = #{connection.quoted_false} and uis_ir.id is null then 1 else 0 end"
