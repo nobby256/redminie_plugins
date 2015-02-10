@@ -16,7 +16,7 @@ module IssueNoParentUpdate
         end
 
         base.add_available_column(QueryColumn.new(:tag, sortable: "#{Issue.table_name}.tag", groupable: true, caption: :field_tag))
-        base.add_available_column(QueryColumn.new(:sub_category_id, sortable: "#{IssueSubCategory.table_name}.position", groupable: true, caption: :field_sub_category))
+        base.add_available_column(QueryColumn.new(:sub_category, sortable: "#{IssueSubCategory.table_name}.position", groupable: true, caption: :field_sub_category))
         base.add_available_column(QueryColumn.new(:external_order, sortable: "#{Issue.table_name}.external_order", groupable: false, caption: :field_external_order))
         base.add_available_column(QueryColumn.new(:started_on,
                                                   :sortable => "COALESCE((SELECT MIN(created_on) FROM #{TimeEntry.table_name} WHERE #{TimeEntry.table_name}.issue_id = #{Issue.table_name}.id), 0)",
