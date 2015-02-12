@@ -4,9 +4,13 @@ Redmine::Plugin.register :zzz_menu_customize do
   description 'This is a plugin for Redmine'
   version '0.0.1'
 
+  Redmine::MenuManager.map :top_menu do |menu|
+    menu.delete :my_page
+  end
+
   Redmine::MenuManager.map :project_menu do |menu|
     menu.delete :roadmap
-    menu.delete :overview
+#    menu.delete :overview
     menu.delete :activity
     
 #    menu.push :zzz_menu_customize, { :controller => 'parking_lot_chart', :action => 'index' }, :parent => :gantt
