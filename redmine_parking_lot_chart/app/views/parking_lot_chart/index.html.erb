@@ -40,8 +40,6 @@
     <%= link_to l(:parking_lot_chart_all_version), {:controller => 'parking_lot_chart', :action => 'index', :project_id => @project.identifier, :status => 'all'} %>
   </div>
 <% end -%>
-<fieldset>
-<legend>effective version</legend>
 <% @chart_data.each do |data| %>
   <%
     if data.issues_status == 'closed'
@@ -85,9 +83,6 @@
     </div>
   </div>
 <% end %>
-</fieldset>
-<fieldset>
-<legend>no effective version</legend>
 <% @no_effective_chart_data.each do |data| %>
   <div class="versionbox" style="00ff99">
     <div class="versionboxtitle">
@@ -116,6 +111,5 @@
     </div>
   </div>
 <% end %>
-</fieldset>
 
 <br style="clear:both" />
