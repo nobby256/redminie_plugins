@@ -1,3 +1,0 @@
-= redmine_version_burndown2
-
-Description goes here
