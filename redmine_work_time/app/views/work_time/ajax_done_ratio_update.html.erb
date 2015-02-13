@@ -1,7 +1,7 @@
 <%#
 # チケットの進捗％をAjaxUpdateする
 %>
-<%if User.current.allowed_to?(:edit_issues, @issue.project)%>
+<%if @issue.editable?%>
     <a name="<%='done_ratio'+@issue.id.to_s%>"
        href="#"
        onclick="input_done_ratio(
