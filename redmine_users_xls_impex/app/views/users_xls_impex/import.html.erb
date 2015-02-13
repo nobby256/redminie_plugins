@@ -17,7 +17,7 @@
     <label class="uxlsie_tabular2"><%= l(:label_users_xlsie_opt_update_only) %></label>
     <%= select_tag("update_only", uxlsie_get_update_options) %><br/>
     <label>
-      <%= check_box_tag("send_user_info",1,true) %>
+      <%= check_box_tag("send_user_info",1,false) %>
       <%= l(:label_users_xlsie_opt_send_info) %>
     </label>
   </fieldset>
