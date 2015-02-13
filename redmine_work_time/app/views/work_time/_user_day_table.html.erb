@@ -89,7 +89,7 @@ prj_pack[:odr_issues].each do |issue_pack|
 
     <%= link_to(issue_html.html_safe, {:controller=>"issues", :action=>"show", :id=>issue_id}, :popup=>true) %>
     <%= print_issue_cost(issue) %>
-    <%if User.current.allowed_to?(:edit_issues, issue.project)%>
+    <%if issue.editable? %>
         <a name="<%='done_ratio'+issue.id.to_s%>"
            href="#"
            onclick="input_done_ratio(
