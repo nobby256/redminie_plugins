@@ -19,7 +19,7 @@ Redmine::Plugin.register :redmine_work_time do
   end
 
   menu :account_menu, :work_time,
-    {:controller => 'work_time', :action => 'index'}, :caption => :work_time
+    {:controller => 'work_time', :action => 'index'}, :caption => :work_time, :if => Proc.new { !User.current.anonymous? }
   menu :project_menu, :work_time,
     {:controller => 'work_time', :action => 'relay_total'}, :caption => :work_time
 end
