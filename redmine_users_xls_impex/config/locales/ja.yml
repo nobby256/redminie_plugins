@@ -1,0 +1,52 @@
+ja:
+  label_users_xlsie_button_export: "エクスポート"
+  label_users_xlsie_button_back: "ユーザーへ戻る"
+
+  label_users_xlsie_field_id: "ID"
+  label_users_xlsie_field_include_in_import: "I"
+  label_users_xlsie_field_auth_source_id: "Auth src ID"
+  label_users_xlsie_field_hashed_password: "Hashed password"
+
+  label_users_xlsie_default: "デフォルト"
+  
+  label_users_xlsie_row_number: "行番号"
+  label_users_xlsie_error_desc: "エラー"
+  
+  label_users_xlsie_caption: "XLS インポート"
+  label_users_xlsie_header: "XLS エクスポート"
+
+  label_users_xlsie_button_apply: "< 戻る"
+
+  label_users_xlsie_xls_file_field: "XLSファイルの選択:"
+  label_users_xlsie_button_file: "次へ >"
+  
+  label_users_xlsie_legend_prepare: "基本設定"
+  label_users_xlsie_sheet_select: "ワークシートの選択:"
+  label_users_xlsie_button_prepare: "次へ >"
+
+  label_users_xlsie_legend_columns: "項目選択 (I-include in import, ID,login,email-for user update)"
+  label_users_xlsie_legend_ioptions: "オプション"
+  label_users_xlsie_opt_update_only: "更新ポリシー: "
+  label_users_xlsie_opt_send_info: "アカウント情報をユーザーに送信"
+  label_users_xlsie_opt_update_a: "追加のみ"
+  label_users_xlsie_opt_update_b: "追加もしくは更新"
+  label_users_xlsie_opt_update_c: "更新のみ"
+  label_users_xlsie_dtracker_none: "<< 選択してください >>"
+  label_users_xlsie_option_ignore: "<< 無視 >>"
+  label_users_xlsie_button_validate: "検証"
+  label_users_xlsie_button_import: "インポート"
+  label_users_xlsie_templates_help: "ヘルプ"
+  label_users_xlsie_sample_lines: "Sample lines"
+  
+  label_users_xlsie_legend_results: "実行結果"
+  label_users_xlsie_legend_errors: "エラー詳細"
+  label_users_xlsie_updated_total: "更新したユーザー (%{count}): "
+  label_users_xlsie_duplicated_total: "重複したユーザー (%{count}): "
+  label_users_xlsie_skipped_total: "スキップした行数: %{count}行"
+  label_users_xlsie_errors_total: "エラーになった行数: %{count}行"
+  label_users_xlsie_success_total: "追加したユーザー (%{count}): "
+  label_users_xlsie_valid_total: "有効な行数: %{count}行"
+  label_users_xlsie_button_users: "ユーザー設定へ戻る"
+  label_users_xlsie_button_again: "初めから"
+  label_users_xlsie_button_apply: "実 行"
+  label_users_xlsie_button_back: "< 戻る"

@@ -1,0 +1,11 @@
+<%= title [l(:label_user_plural), users_path], l(:label_users_xlsie_header) %>
+
+<%= form_tag({:action => 'export_start'}) do %>
+  <fieldset><legend><%= l(:label_filter_plural) %></legend>
+    <label><%= l(:field_status) %>:</label>
+    <%= select_tag 'export_status', users_status_options_for_select(@export_status), :class => "small"  %>
+    <label><%= l(:label_user) %>:</label>
+    <%= text_field_tag 'name', params[:name], :size => 30 %>
+  </fieldset>
+  <%= submit_tag l(:button_apply), :class => "small", :name => nil %>
+<% end %>

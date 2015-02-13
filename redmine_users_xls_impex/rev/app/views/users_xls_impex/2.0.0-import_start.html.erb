@@ -1,0 +1,11 @@
+<%= title [l(:label_user_plural), users_path], l(:label_users_xlsie_caption) %>
+
+<%= form_tag({:action => 'prepare_import'}, {:multipart => true}) do %>
+  <p>
+    <%= label_tag('xls_file', l(:label_users_xlsie_xls_file_field) ) %><br/>
+    <%= file_field_tag 'xls_file', :size => 60, :accept => 'application/vnd.ms-excel' %>
+  </p>
+
+  <%= submit_tag l(:label_users_xlsie_button_file) %>
+<% end %>
+
