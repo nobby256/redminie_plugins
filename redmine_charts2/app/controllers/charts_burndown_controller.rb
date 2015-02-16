@@ -79,12 +79,16 @@ class ChartsBurndownController < ChartsController
         issues_children << issue.parent_id if issue.parent_id
       end
 
+      range_start_date = issue.created_on.to_date
+      if issue.start_date
+        range_start_date = issue.start_date if issue.start_date < range_start_date
+      end
       if @range[:range] == :days
-        range_value = issue.created_on.to_time.strftime('%Y%j')
+        range_value = range_start_date.to_time.strftime('%Y%j')
       elsif @range[:range] == :weeks
-        range_value = issue.created_on.to_time.strftime('%Y0%W')
+        range_value = range_start_date.to_time.strftime('%Y0%W')
       else
-        range_value = issue.created_on.to_time.strftime('%Y0%m')
+        range_value = range_start_date.to_time.strftime('%Y0%m')
       end
       @range[:keys].each_with_index do |key, i|
         estimated_hours_per_issue[issue.id][i] = issue.estimated_hours if range_value <= key and issue.estimated_hours
