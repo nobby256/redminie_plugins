@@ -1,7 +1,7 @@
 ja:
   charts_menu_label: "チャート"
   charts_link_ratio: "作業時間割合"
-  charts_link_timeline: "実績工数予定"
+  charts_link_timeline: "週次作業時間推移"
   charts_link_burndown: "週次バーンアップ"
   charts_link_deviation: "完了工数(予測)一覧"
   charts_show_last: "表示"
@@ -101,9 +101,9 @@ ja:
   charts_link_burndown2: "日次バーンダウン"
   charts_burndown2_x: ""
   charts_burndown2_y: "時間"
-  charts_burndown2_group_velocity: "計画"
+  charts_burndown2_group_velocity: "残工数(計画)"
   charts_burndown2_hint_velocity: "(計画を基に)完了まで %{remaining_hours} 時間"
-  charts_burndown2_group_burndown: "実績"
+  charts_burndown2_group_burndown: "残工数(実績)"
   charts_burndown2_hint_remaining: "完了まで %{remaining_hours} 時間 (%{work_done}% 作業完了)"
   charts_burndown2_help: "進捗とバーンダウン(残工数)。 各バージョンにおける作成日から(実際の)完了までのデータを表しています。"
 
