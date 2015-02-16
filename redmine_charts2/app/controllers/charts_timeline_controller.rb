@@ -21,8 +21,8 @@ class ChartsTimelineController < ChartsController
         end
         index = @range[:keys].index(val)
         if index
-          sets[group_name] ||= Array.new(@range[:keys].size, [0, get_hints])
-          sets[group_name][index] = [row.logged_hours.to_f, get_hints(row)]
+          sets[group_name] ||= Array.new(@range[:keys].size, [0, get_hints(group_name, nil)])
+          sets[group_name][index] = [row.logged_hours.to_f, get_hints(group_name, row)]
           max = row.logged_hours.to_f if max < row.logged_hours.to_f
         else
           raise row.range_value.to_s
@@ -42,11 +42,11 @@ class ChartsTimelineController < ChartsController
     }
   end
 
-  def get_hints(record = nil)
+  def get_hints(group_name, record = nil)
     unless record.nil?
-      l(:charts_timeline_hint, { :hours => RedmineCharts::Utils.round(record.logged_hours), :entries => record.entries.to_i })
+      l(:charts_timeline_hint, { :group_name => group_name, :hours => RedmineCharts::Utils.round(record.logged_hours), :entries => record.entries.to_i })
     else
-      l(:charts_timeline_hint_empty)
+      l(:charts_timeline_hint_empty, { :group_name => group_name} )
     end
   end
 

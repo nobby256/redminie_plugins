@@ -5,6 +5,8 @@ class ChartsRatioController < ChartsController
   protected
 
   def get_data
+    @grouping ||= :activity_id
+
     rows = ChartTimeEntry.get_aggregation(@grouping, @conditions)
 
     bigger_rows = []

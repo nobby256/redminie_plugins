@@ -1,9 +1,9 @@
 ja:
   charts_menu_label: "チャート"
-  charts_link_ratio: "実績工数割合"
+  charts_link_ratio: "作業時間割合"
   charts_link_timeline: "実績工数予定"
-  charts_link_burndown: "バーンダウン"
-  charts_link_deviation: "予実分析"
+  charts_link_burndown: "週次バーンアップ"
+  charts_link_deviation: "完了工数(予測)一覧"
   charts_show_last: "表示"
   charts_show_last_days: "日"
   charts_show_last_weeks: "週"
@@ -31,8 +31,8 @@ ja:
 
   charts_timeline_x: ""
   charts_timeline_y: "時間"
-  charts_timeline_hint: "%{hours} 時間, %{entries} 個"
-  charts_timeline_hint_empty: "0 時間"
+  charts_timeline_hint: "%{group_name}, %{hours} 時間, %{entries} 個"
+  charts_timeline_hint_empty: "%{group_name}, 0 時間"
   charts_timeline_help: "メンバ、チケット、活動、カテゴリごとに分類およびフィルタして時間経過を表しています"
 
   charts_burndown_x: ""
@@ -43,7 +43,7 @@ ja:
   charts_burndown_hint_predicted: "完了まで合計 %{predicted_hours} 時間"
   charts_burndown_hint_predicted_over_estimation: "完了まで合計 %{predicted_hours} 時間, %{hours_over_estimation} 時間予定オーバー"
   charts_burndown_group_estimated: "見積工数"
-  charts_burndown_group_logged: "経過時間"
+  charts_burndown_group_logged: "実績工数"
   charts_burndown_group_remaining: "残工数"
   charts_burndown_group_predicted: "予測完了工数 (実績工数 + 残工数)"
   charts_burndown_help: "見積、実績および残工数を表しています"
@@ -88,7 +88,7 @@ ja:
   charts_group_by_project_id: "プロジェクト"
   charts_group_by_assigned_to_id: "担当者"
 
-  charts_link_issue: "チケットレート"
+  charts_link_issue: "チケット数割合"
   charts_issue_label: "%{label}"
   charts_issue_hint: "%{label}<br>%{issues}/%{total_issues} チケット (%{percent}%)"
   charts_issue_others: "その他"
@@ -98,12 +98,12 @@ ja:
   charts_error_no_data: "表示するデータがありません"
   charts_error_no_version: "表示するバージョンがありません"
 
-  charts_link_burndown2: "進捗とバーンダウン"
+  charts_link_burndown2: "日次バーンダウン"
   charts_burndown2_x: ""
   charts_burndown2_y: "時間"
-  charts_burndown2_group_velocity: "進捗"
-  charts_burndown2_hint_velocity: "(進捗を基に)完了まで %{remaining_hours} 時間"
-  charts_burndown2_group_burndown: "バーンダウン"
+  charts_burndown2_group_velocity: "計画"
+  charts_burndown2_hint_velocity: "(計画を基に)完了まで %{remaining_hours} 時間"
+  charts_burndown2_group_burndown: "実績"
   charts_burndown2_hint_remaining: "完了まで %{remaining_hours} 時間 (%{work_done}% 作業完了)"
   charts_burndown2_help: "進捗とバーンダウン(残工数)。 各バージョンにおける作成日から(実際の)完了までのデータを表しています。"
 
