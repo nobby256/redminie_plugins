@@ -32,13 +32,13 @@ module IssueNoParentUpdate
         unless @cached_started_on
           @cached_started_on = true
           v = time_entries.minimum(:created_on)
-          @started_on = v ? Date.new(v.year, v.month, v.day) : nil
+          @started_on = v ? v.to_date : nil
         end
         return @started_on
       end
       def closed_on
         v = read_attribute(:closed_on)
-        return (v ? Date.new(v.year, v.month, v.day) : nil)
+        return (v ? v.to_date : nil)
       end
     end
   end
