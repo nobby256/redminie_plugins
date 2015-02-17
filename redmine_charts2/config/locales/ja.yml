@@ -1,8 +1,8 @@
 ja:
   charts_menu_label: "チャート"
   charts_link_ratio: "作業時間割合"
-  charts_link_timeline: "週次作業時間推移"
-  charts_link_burndown: "週次バーンアップ"
+  charts_link_timeline: "作業時間推移"
+  charts_link_burndown: "バーンアップ"
   charts_link_deviation: "完了工数(予測)一覧"
   charts_show_last: "表示"
   charts_show_last_days: "日"
@@ -64,8 +64,8 @@ ja:
   charts_deviation_group_estimated: "見積工数"
   charts_deviation_help: "各チケットの見積工数と実績工数と残工数の割合を表しています。この割合は100%以下になるべきです。見積工数のあるチケットのみ表示しています。左端に表示しているバーはこのプロジェクトの平均値を表しています。"
 
-  charts_earlier: "« 過去"
-  charts_later: "最新 »"
+  charts_earlier: "« 前ページ"
+  charts_later: "次ページ »"
 
   charts_previous: "« 前へ"
   charts_next: "次へ »"
