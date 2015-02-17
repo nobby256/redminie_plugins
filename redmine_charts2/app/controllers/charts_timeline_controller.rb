@@ -29,7 +29,7 @@ class ChartsTimelineController < ChartsController
         end
       end
     else
-      sets[""] ||= Array.new(@range[:keys].size, [0, get_hints])
+      sets[""] ||= Array.new(@range[:keys].size, [0, get_hints(RedmineCharts::GroupingUtils.to_string(nil, @grouping), nil)])
     end
 
     sets = sets.sort.collect { |name, values| [name, values] }
