@@ -31,8 +31,7 @@ module IssueNoParentUpdate
       def started_on
         unless @cached_started_on
           @cached_started_on = true
-          v = time_entries.minimum(:created_on)
-          @started_on = v ? v.to_date : nil
+          @started_on = time_entries.minimum(:spent_on)
         end
         return @started_on
       end
