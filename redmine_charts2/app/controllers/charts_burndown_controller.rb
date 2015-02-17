@@ -50,7 +50,8 @@ class ChartsBurndownController < ChartsController
       conditions[column_name] = v if v and column_name
     end
 
-    issues = Issue.all(:conditions => conditions)
+    result = Issue.where("issues.fixed_version_id IS NOT NULL")
+    issues = result.where(conditions).all
 
     rows, @range = ChartTimeEntry.get_timeline(:issue_id, @conditions, @range)
 
