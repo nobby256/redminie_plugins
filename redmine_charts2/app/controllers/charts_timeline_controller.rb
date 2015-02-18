@@ -5,6 +5,7 @@ class ChartsTimelineController < ChartsController
   protected
 
   def get_data
+    @grouping ||= :activity_id
     rows, @range = ChartTimeEntry.get_timeline(@grouping, @conditions, @range)
 
     sets = {}
