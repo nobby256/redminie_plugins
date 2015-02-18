@@ -1,3 +1,4 @@
+# coding: utf-8
 class ChartsBurndownController < ChartsController
 
   unloadable
@@ -51,7 +52,8 @@ class ChartsBurndownController < ChartsController
     end
 
     result = Issue.where("issues.fixed_version_id IS NOT NULL")
-    issues = result.where(conditions).all
+    result = result.where(conditions)
+    issues = result.includes(:tracker).all
 
     rows, @range = ChartTimeEntry.get_timeline(:issue_id, @conditions, @range)
 
@@ -117,7 +119,10 @@ class ChartsBurndownController < ChartsController
         total_remaining_hours[index] += ((done_ratio > 0 and logged > 0) ? (logged/done_ratio) : (estimated/100)) * (100-done_ratio)
 
         total_logged_hours[index] += logged
-        total_estimated_hours[index] += estimated
+        if issue.tracker.is_in_roadmap?
+#ロードマップに表示しないチケットは、残工数には加算するが、予定工数には加算しない
+          total_estimated_hours[index] += estimated
+        end
         total_done[index] += done_ratio
       end
 
