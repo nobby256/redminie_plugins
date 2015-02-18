@@ -3,6 +3,7 @@ require 'redmine_charts/utils'
 # Configuring routing for plugin's controllers.
 RedmineApp::Application.routes.draw do
   scope '/charts' do
+    get "/burndown3/:project_id" => "charts_burndown3#index"
     get "/burndown2/:project_id" => "charts_burndown2#index"
     get "/burndown/:project_id" => "charts_burndown#index"
     get "/ratio/:project_id" => "charts_ratio#index"
