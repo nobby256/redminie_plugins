@@ -1,3 +1,4 @@
+# coding: utf-8
 class ChartsBurndown2Controller < ChartsController
 
   unloadable
@@ -66,7 +67,7 @@ class ChartsBurndown2Controller < ChartsController
       conditions[column_name] = v if v and column_name
     end
 
-    issues = Issue.all(:conditions => conditions)
+    issues = Issue.includes(:tracker).all(:conditions => conditions)
 
     # remove parent issues
     issues_children = []
@@ -149,8 +150,11 @@ class ChartsBurndown2Controller < ChartsController
         total_remaining_hours[index] += estimated * (100-done_ratio) / 100
 
         total_logged_hours[index] += logged
-        total_estimated_hours[index] += estimated
-        total_velocities[index] += velocity
+        if issue.tracker.is_in_roadmap?
+#ロードマップに表示しないチケットは、残工数には加算するが、予定工数には加算しない
+          total_estimated_hours[index] += estimated
+          total_velocities[index] += velocity
+        end
         if estimated > 0
           estimated_count += 1
         else
