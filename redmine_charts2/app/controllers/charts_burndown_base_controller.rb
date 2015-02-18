@@ -41,10 +41,10 @@ class ChartsBurndownBaseController < ChartsController
 
     sets = [
       [l(:charts_burndown_group_estimated), estimated],
+      [l(:charts_burndown_group_predicted), predicted],
 #        [l(:charts_burndown_group_logged), logged],
       [l(:charts_burndown2_group_velocity), velocity],
       [l(:charts_burndown_group_remaining), remaining],
-      [l(:charts_burndown_group_predicted), predicted],
     ]
 
     {

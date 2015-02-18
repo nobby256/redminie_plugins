@@ -47,7 +47,7 @@ ja:
   charts_burndown_group_logged: "実績工数"
   charts_burndown_group_remaining: "残工数"
   charts_burndown_group_predicted: "予測完了工数 (実績工数 + 残工数)"
-  charts_burndown_help: "見積、実績および残工数を表しています"
+  charts_burndown_help: "総作業量と、残工数の推移を表しています"
 
   charts_deviation_x: "チケット"
   charts_deviation_y: "見積工数の割合(%)"
