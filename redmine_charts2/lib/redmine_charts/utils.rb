@@ -3,7 +3,7 @@ module RedmineCharts
 
     @@colors = ['#80C31C', '#FF7900', '#DFC329', '#00477F', '#d01f3c', '#356aa0', '#C79810', '#4C88BE', '#5E4725', '#6363AC']
 
-    @@controllers = %w{burndown3 burndown2 burndown issue deviation timeline ratio}.collect { |name| [name.to_sym, "charts_#{name}".to_sym] }
+    @@controllers = %w{burndown3 burndown issue deviation timeline ratio}.collect { |name| [name.to_sym, "charts_#{name}".to_sym] }
 
     # Returns default controller name, which should be entry when user click 'charts' label in project menu.
     # See init.rb.
