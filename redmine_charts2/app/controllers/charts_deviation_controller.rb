@@ -5,7 +5,7 @@ class ChartsDeviationController < ChartsController
   protected  
 
   def get_data
-    rows = ChartTimeEntry.get_aggregation(:issue_id, @conditions)
+    rows = ChartTimeEntry.get_aggregation(:issue_id, @conditions, true)
 
     done_ratios = ChartDoneRatio.get_aggregation_for_issue(@conditions)
 

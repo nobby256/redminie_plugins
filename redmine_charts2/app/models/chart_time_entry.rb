@@ -80,7 +80,7 @@ class ChartTimeEntry < ActiveRecord::Base
     issues
   end
 
-  def self.get_aggregation(raw_group, raw_conditions)
+  def self.get_aggregation(raw_group, raw_conditions, is_in_version = nil)
     raw_group ||= :user_id
     group = RedmineCharts::GroupingUtils.to_column(raw_group, "chart_time_entries")
 
@@ -113,7 +113,12 @@ class ChartTimeEntry < ActiveRecord::Base
       select << ", 0 as estimated_hours"
     end
 
-    rows = all(:joins => joins, :select => select, :conditions => conditions, :readonly => true, :group => group, :order => "1 desc, 3 asc")
+    if is_in_version
+      result = where('issues.fixed_version_id IS NOT NULL')
+      rows = result.all(:joins => joins, :select => select, :conditions => conditions, :readonly => true, :group => group, :order => "1 desc, 3 asc")
+    else
+      rows = all(:joins => joins, :select => select, :conditions => conditions, :readonly => true, :group => group, :order => "1 desc, 3 asc")
+    end
 
     rows.each do |row|
       row.group_id = '0' unless row.group_id
