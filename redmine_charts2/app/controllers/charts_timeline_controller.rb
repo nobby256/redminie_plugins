@@ -80,7 +80,8 @@ class ChartsTimelineController < ChartsController
   end
 
   def get_multiconditions_options
-    RedmineCharts::ConditionsUtils.types
+#    RedmineCharts::ConditionsUtils.types
+    (RedmineCharts::ConditionsUtils.types - [:project_ids]).flatten
   end
 
 end

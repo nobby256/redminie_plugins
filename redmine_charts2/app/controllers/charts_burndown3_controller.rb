@@ -7,14 +7,11 @@ class ChartsBurndown3Controller < ChartsBurndownBaseController
 
   def get_data
     @conditions[:fixed_version_ids] ||= get_current_fixed_version_in(@project)
-
     version = unless @conditions[:fixed_version_ids].empty?
       Version.first(:conditions => {:id => @conditions[:fixed_version_ids][0]})
     end
-
     unless version
-      { :error => :charts_error_no_version }
-      return
+      return { :error => :charts_error_no_version }
     end
 
     start_date = version.start_date || version.created_on.to_date
@@ -37,7 +34,8 @@ class ChartsBurndown3Controller < ChartsBurndownBaseController
   end
 
   def get_multiconditions_options
-    (RedmineCharts::ConditionsUtils.types - [:activity_ids, :user_ids, :fixed_version_ids, :project_ids]).flatten
+#    (RedmineCharts::ConditionsUtils.types - [:activity_ids, :user_ids, :fixed_version_ids, :project_ids]).flatten
+    [ :issue_ids, :user_ids, :category_ids, :tracker_ids, :assigned_to_ids ]
   end
 
 end

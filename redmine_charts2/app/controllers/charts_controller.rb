@@ -167,6 +167,17 @@ class ChartsController < ApplicationController
     end
   end
 
+  def get_fixed_version_ids(project)
+    versions = RedmineCharts::ConditionsUtils.to_options(project, [:fixed_version_ids])[:fixed_version_ids]
+    unless versions.nil? || versions.empty?
+      return versions.collect do |v| 
+        v[1]
+      end
+    else
+      []
+    end
+  end
+
   def title
     get_title
   end

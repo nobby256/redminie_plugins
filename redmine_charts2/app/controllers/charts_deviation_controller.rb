@@ -5,7 +5,12 @@ class ChartsDeviationController < ChartsController
   protected  
 
   def get_data
-    rows = ChartTimeEntry.get_aggregation(:issue_id, @conditions, true)
+    @conditions[:fixed_version_ids] ||= get_fixed_version_ids(@project)
+    if @conditions[:fixed_version_ids].empty?
+      return { :error => :charts_error_no_version }
+    end
+
+    rows = ChartTimeEntry.get_aggregation(:issue_id, @conditions)
 
     done_ratios = ChartDoneRatio.get_aggregation_for_issue(@conditions)
 
@@ -191,7 +196,7 @@ class ChartsDeviationController < ChartsController
   end
 
   def get_multiconditions_options
-    [:project_ids]
+    [:fixed_version_ids, :tracker_ids]
   end
 
   def show_pages

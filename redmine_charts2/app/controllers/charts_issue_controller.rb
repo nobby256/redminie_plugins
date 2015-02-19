@@ -6,6 +6,10 @@ class ChartsIssueController < ChartsController
 
   def get_data
     @grouping ||= :status_id
+    @conditions[:fixed_version_ids] ||= get_fixed_version_ids(@project)
+    if @conditions[:fixed_version_ids].empty?
+      return { :error => :charts_error_no_version }
+    end
 
     conditions = {}
 
@@ -16,8 +20,7 @@ class ChartsIssueController < ChartsController
 
     group_column = RedmineCharts::GroupingUtils.to_column(@grouping, 'issues')
 
-    result = Issue.where("issues.fixed_version_id IS NOT NULL")
-    rows = result.all(:select => "#{group_column || 0} as group_id, count(*) as issues_count", :conditions => conditions, :group => group_column)
+    rows = Issue.all(:select => "#{group_column || 0} as group_id, count(*) as issues_count", :conditions => conditions, :group => group_column)
 
     total_issues = 0
 
@@ -61,11 +64,13 @@ class ChartsIssueController < ChartsController
   end
 
   def get_grouping_options
-    (RedmineCharts::GroupingUtils.types - [:activity_id, :issue_id, :user_id]).flatten
+#    (RedmineCharts::GroupingUtils.types - [:activity_id, :issue_id, :user_id]).flatten
+    [ :category_id, :tracker_id, :fixed_version_id, :priority_id, :author_id, :status_id, :project_id, :assigned_to_id ]
   end
 
   def get_multiconditions_options
-    (RedmineCharts::ConditionsUtils.types - [:activity_ids, :issue_ids, :user_ids]).flatten
+#    (RedmineCharts::ConditionsUtils.types - [:activity_ids, :issue_ids, :user_ids]).flatten
+    [ :category_ids, :status_ids, :fixed_version_ids, :tracker_ids, :priority_ids, :author_ids, :assigned_to_ids ]
   end
 
 
