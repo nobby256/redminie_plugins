@@ -109,64 +109,66 @@ class ChartsBurndownBaseController < ChartsController
       estimated_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
       velocities_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
 
-      #チケットの作成日と開始日の早い日付と、バージョンの開始日を比較し、大きい方を範囲キーとする
-      range_start_date = issue.created_on.to_date
+      #チケットの作成日と開始日の早い日付と、バージョンの開始日を比較し、大きい方をチケット追加日とする
+      #チケット追加日は総工数を求める際に利用
+      issue_add_date = issue.created_on.to_date
       if issue.start_date
-        range_start_date = issue.start_date if issue.start_date < issue.created_on.to_date
+        issue_add_date = issue.start_date if issue.start_date < issue.created_on.to_date
       end
-      range_start_key = [RedmineCharts::RangeUtils.format_date_with_unit(range_start_date, @range[:range]), @range[:keys].first].max
+      issue_add_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue_add_date, @range[:range]), @range[:keys].first].max
 
-      #チケットの開始日とバージョンの開始日を比較し、大きい方を範囲キーとする
+      #チケットの開始日とバージョンの開始日を比較し、大きい方を開始日とする
+      #チケットに開始日がない場合は、バージョンの開始日で代用
       issue_start_date = issue.start_date ? issue.start_date : @range[:keys].first
       issue_start_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue.start_date, @range[:range]), @range[:keys].first].max
 
-      #チケットの終了日とバージョンの終了日を比較し、小さい方を範囲キーとする
-      range_end_date = issue.due_date ? issue.due_date : @range[:keys].last
-      range_end_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue.due_date, @range[:range]), @range[:keys].last].min
+      #チケットの終了日とバージョンの終了日を比較し、小さい方を終了日とする
+      #チケットに終了日が無い場合は、バージョンの期限で代用
+      issue_end_date = issue.due_date ? issue.due_date : @range[:keys].last
+      issue_end_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue.due_date, @range[:range]), @range[:keys].last].min
 
-      range_diff_days = (range_end_date - issue_start_date)
+      range_diff_days = (issue_end_date - issue_start_date)
 
       @range[:keys].each_with_index do |key, i|
-        if range_start_key <= key
-            #開始日に至るまではゼロ、開始日以降はすべて +1
+        if issue_add_key <= key
+            #追加日に至るまではゼロ、追加日以降は +1
           issues_per_date[i] += 1
         end
-        if range_start_key <= key
+        if issue_add_key <= key
           if issue.estimated_hours
-            #開始日に至るまではゼロ、開始日以降はすべて同一の値（issue.estimated_hours）
+            #追加日に至るまではゼロ、追加日以降はすべて同一の値（issue.estimated_hours）
             estimated_hours_per_issue[issue.id][i] = issue.estimated_hours
           end
         end
-        if range_start_key <= key && key <= range_end_key
+        if issue_add_key <= key && key <= issue_end_key
           if issue.estimated_hours
             next_key = (@range[:keys][i].to_i + 1).to_s
             next_date = RedmineCharts::RangeUtils.date_from_unit(next_key, @range[:range])
             key_date = next_date - 1
 
             if range_diff_days > 0
-              #チケットの実施期間が二日以上ある場合、その期間の残工数(基準)を滑らかに減少させたい
-              #例：三日のタスクの場合、１日目は予定工数の1/1、２日目は予定工数の2/3、３日目は予定工数の1/3
+              #チケットの期間が二日以上ある場合、その期間の残工数(基準)を滑らかに減少させたい
+              #例：三日のタスクの場合、１日目の残工数は予定工数の2/3、２日目の残工数は予定工数の1/3、３日目の残工数はゼロ
               if key_date < issue_start_date
-                #チケットが開始する直前まで
+                #開始日の直前まで
                 velocities_per_issue[issue.id][i] = issue.estimated_hours
-              elsif key_date < range_end_date
-                velocities_per_issue[issue.id][i] = (issue.estimated_hours / range_diff_days) * (range_end_date - key_date)
+              elsif key_date < issue_end_date
+                #開始日～最終日の直前
+                velocities_per_issue[issue.id][i] = (issue.estimated_hours / range_diff_days) * (issue_end_date - key_date)
               else
-                #ラスト１日もしくは経過済み
+                #最終日もしくは経過後
                 velocities_per_issue[issue.id][i] = 0
               end
             else
-              #チケットの実施期間が一日の場合は予定工数そのままを採用
-              #ポイント：完了日の次の日に初めて残工数がゼロになる
+              #チケットの期間が一日の場合は実施日の時点で残工数はゼロになる
               if key_date < issue_start_date
-                #チケットが開始する直前まで
+                #開始日の直前まで
                 velocities_per_issue[issue.id][i] = issue.estimated_hours
               else
-                #当日
+                #実施日もしくは経過後
                 velocities_per_issue[issue.id][i] = 0
               end
             end
-
           end
         end
       end
