@@ -7,10 +7,11 @@ class ChartsBurndownBaseController < ChartsController
 
   def get_data_core
 
-    total_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_velocities = get_data_for_burndown_chart
+    total_base_estimated_hours, total_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_velocities = get_data_for_burndown_chart
 
     max = 0
     remaining = []
+    base_estimated = []
     estimated = []
     logged = []
     predicted = []
@@ -18,13 +19,19 @@ class ChartsBurndownBaseController < ChartsController
     @range[:keys].each_with_index do |key, index|
       max = total_predicted_hours[index] if max < total_predicted_hours[index]
       max = total_estimated_hours[index] if max < total_estimated_hours[index]
+      max = total_base_estimated_hours[index] if max < total_base_estimated_hours[index]
 
-      estimated << [total_estimated_hours[index], l(:charts_burndown_hint_estimated, { :estimated_hours => RedmineCharts::Utils.round(total_estimated_hours[index]) })]
+      base_estimated << [total_base_estimated_hours[index], l(:charts_burndown_hint_base_estimated, { :estimated_hours => RedmineCharts::Utils.round(total_base_estimated_hours[index]) })]
+      if total_estimated_hours[index] > total_base_estimated_hours[index]
+        estimated << [total_estimated_hours[index], l(:charts_burndown_hint_estimated_over_base_estimation, { :estimated_hours => RedmineCharts::Utils.round(total_estimated_hours[index]), :hours_over_estimation => RedmineCharts::Utils.round(total_estimated_hours[index] - total_base_estimated_hours[index]) })]
+      else
+        estimated << [total_estimated_hours[index], l(:charts_burndown_hint_estimated, { :estimated_hours => RedmineCharts::Utils.round(total_estimated_hours[index]) })]
+      end
       if RedmineCharts::RangeUtils.date_from_day(key).to_time <= Time.now
           remaining << [total_remaining_hours[index], l(:charts_burndown2_hint_remaining, { :remaining_hours => RedmineCharts::Utils.round(total_remaining_hours[index]), :work_done => total_done[index] > 0 ? Integer(total_done[index]) : 0 })]
         logged  << [total_logged_hours[index], l(:charts_burndown_hint_logged, { :logged_hours => RedmineCharts::Utils.round(total_logged_hours[index]) })]
-        if total_predicted_hours[index] > total_estimated_hours[index]
-          predicted << [total_predicted_hours[index], l(:charts_burndown_hint_predicted_over_estimation, { :predicted_hours => RedmineCharts::Utils.round(total_predicted_hours[index]), :hours_over_estimation => RedmineCharts::Utils.round(total_predicted_hours[index] - total_estimated_hours[index]) }), true]
+        if total_predicted_hours[index] > total_base_estimated_hours[index]
+          predicted << [total_predicted_hours[index], l(:charts_burndown_hint_predicted_over_estimation, { :predicted_hours => RedmineCharts::Utils.round(total_predicted_hours[index]), :hours_over_estimation => RedmineCharts::Utils.round(total_predicted_hours[index] - total_base_estimated_hours[index]) }), true]
         else
           predicted << [total_predicted_hours[index], l(:charts_burndown_hint_predicted, { :predicted_hours => RedmineCharts::Utils.round(total_predicted_hours[index]) })]
         end
@@ -40,9 +47,10 @@ class ChartsBurndownBaseController < ChartsController
     velocity[velocity.size-1] = [0, l(:charts_burndown2_hint_velocity, { :remaining_hours => 0.0})]
 
     sets = [
+      [l(:charts_burndown_group_base_estimated), base_estimated],
       [l(:charts_burndown_group_estimated), estimated],
       [l(:charts_burndown_group_predicted), predicted],
-#        [l(:charts_burndown_group_logged), logged],
+      [l(:charts_burndown_group_logged), logged],
       [l(:charts_burndown2_group_velocity), velocity],
       [l(:charts_burndown_group_remaining), remaining],
     ]
@@ -80,8 +88,9 @@ class ChartsBurndownBaseController < ChartsController
 
     done_ratios_per_issue = ChartDoneRatio.get_timeline_for_issue(@conditions, @range)
 
-    total_estimate_hours = Array.new(@range[:keys].size, 0)
+    total_estimate_hours_for_done = Array.new(@range[:keys].size, 0)
     total_base_estimated_hours = Array.new(@range[:keys].size, 0)
+    total_estimated_hours = Array.new(@range[:keys].size, 0)
     total_logged_hours = Array.new(@range[:keys].size, 0)
     total_remaining_hours = Array.new(@range[:keys].size, 0)
     total_predicted_hours = Array.new(@range[:keys].size, 0)
@@ -100,34 +109,65 @@ class ChartsBurndownBaseController < ChartsController
       estimated_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
       velocities_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
 
-      issue_start_date = issue.created_on.to_date
+      #チケットの作成日と開始日の早い日付と、バージョンの開始日を比較し、大きい方を範囲キーとする
       range_start_date = issue.created_on.to_date
       if issue.start_date
-        issue_start_date = issue.start_date if issue.start_date > issue.created_on.to_date
         range_start_date = issue.start_date if issue.start_date < issue.created_on.to_date
       end
-
-      issue_start_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue_start_date, @range[:range]), @range[:keys].first].max
       range_start_key = [RedmineCharts::RangeUtils.format_date_with_unit(range_start_date, @range[:range]), @range[:keys].first].max
-      range_end_key = issue.due_date ? [RedmineCharts::RangeUtils.format_date_with_unit(issue.due_date, @range[:range]), @range[:keys].last].min : @range[:keys].last
 
-      range_start_date = RedmineCharts::RangeUtils.date_from_unit(range_start_key, @range[:range])
-      range_end_date = RedmineCharts::RangeUtils.date_from_unit(range_end_key, @range[:range])
-      range_diff_days = (range_end_date - issue_start_date) #オリジナルのバグ？ issue_start_dateはrange_start_dateの可能性あり
-      #range_diff_days = (range_end_date - range_start_date)
+      #チケットの開始日とバージョンの開始日を比較し、大きい方を範囲キーとする
+      issue_start_date = issue.start_date ? issue.start_date : @range[:keys].first
+      issue_start_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue.start_date, @range[:range]), @range[:keys].first].max
+
+      #チケットの終了日とバージョンの終了日を比較し、小さい方を範囲キーとする
+      range_end_date = issue.due_date ? issue.due_date : @range[:keys].last
+      range_end_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue.due_date, @range[:range]), @range[:keys].last].min
+
+      range_diff_days = (range_end_date - issue_start_date)
 
       @range[:keys].each_with_index do |key, i|
         if range_start_key <= key
+            #開始日に至るまではゼロ、開始日以降はすべて +1
+          issues_per_date[i] += 1
+        end
+        if range_start_key <= key
           if issue.estimated_hours
-            if key <= range_end_key
-              velocities_per_issue[issue.id][i] =
-                (range_diff_days > 0 and key > issue_start_key) ?
-                (issue.estimated_hours * (range_end_date - RedmineCharts::RangeUtils.date_from_unit(key, @range[:range])) / range_diff_days) :
-                issue.estimated_hours
-            end
+            #開始日に至るまではゼロ、開始日以降はすべて同一の値（issue.estimated_hours）
             estimated_hours_per_issue[issue.id][i] = issue.estimated_hours
           end
-          issues_per_date[i] += 1
+        end
+        if range_start_key <= key && key <= range_end_key
+          if issue.estimated_hours
+            next_key = (@range[:keys][i].to_i + 1).to_s
+            next_date = RedmineCharts::RangeUtils.date_from_unit(next_key, @range[:range])
+            key_date = next_date - 1
+
+            if range_diff_days > 0
+              #チケットの実施期間が二日以上ある場合、その期間の残工数(基準)を滑らかに減少させたい
+              #例：三日のタスクの場合、１日目は予定工数の1/1、２日目は予定工数の2/3、３日目は予定工数の1/3
+              if key_date < issue_start_date
+                #チケットが開始する直前まで
+                velocities_per_issue[issue.id][i] = issue.estimated_hours
+              elsif key_date < range_end_date
+                velocities_per_issue[issue.id][i] = (issue.estimated_hours / range_diff_days) * (range_end_date - key_date)
+              else
+                #ラスト１日もしくは経過済み
+                velocities_per_issue[issue.id][i] = 0
+              end
+            else
+              #チケットの実施期間が一日の場合は予定工数そのままを採用
+              #ポイント：完了日の次の日に初めて残工数がゼロになる
+              if key_date < issue_start_date
+                #チケットが開始する直前まで
+                velocities_per_issue[issue.id][i] = issue.estimated_hours
+              else
+                #当日
+                velocities_per_issue[issue.id][i] = 0
+              end
+            end
+
+          end
         end
       end
     end
@@ -151,9 +191,10 @@ class ChartsBurndownBaseController < ChartsController
         total_logged_hours[index] += logged
         if issue.tracker.is_in_roadmap?
           total_base_estimated_hours[index] += base_estimate
-          total_estimate_hours[index] += estimated
           total_velocities[index] += velocity
         end
+        total_estimated_hours[index] += base_estimate
+        total_estimate_hours_for_done[index] += estimated
         if estimated > 0
           estimated_count += 1
         else
@@ -164,7 +205,7 @@ class ChartsBurndownBaseController < ChartsController
       total_logged_hours[index] += logged_hours_per_issue[0][index]
 
       if issues_per_date[index] > 0
-        total_done[index] += (1 - (total_remaining_hours[index] / total_estimate_hours[index])) * 100 * estimated_count if total_estimate_hours[index] > 0
+        total_done[index] += (1 - (total_remaining_hours[index] / total_estimate_hours_for_done[index])) * 100 * estimated_count if total_estimate_hours_for_done[index] > 0
         total_done[index] /= issues_per_date[index]
       end
 
@@ -172,13 +213,14 @@ class ChartsBurndownBaseController < ChartsController
 
       total_logged_hours[index] = 0 if total_logged_hours[index] < 0.01
       total_base_estimated_hours[index] = 0 if total_base_estimated_hours[index] < 0.01
+      total_estimated_hours[index] = 0 if total_estimated_hours[index] < 0.01
       total_remaining_hours[index] = 0 if total_remaining_hours[index] < 0.01
       total_done[index] = 0 if total_done[index] < 0.01
       total_predicted_hours[index] = 0 if total_predicted_hours[index] < 0.01
       total_velocities[index] = 0 if total_velocities[index] < 0.01
     end
 
-    [total_base_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_velocities]
+    [total_base_estimated_hours, total_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_velocities]
   end
 
   def get_title
