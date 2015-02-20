@@ -265,7 +265,36 @@ class ChartsBurndownBaseController < ChartsController
 
   def get_estimated_hours(issue, key_date)
     #journalから最新の工数を利用する
-    return issue.estimated_hours
+    unless @journal_estimation
+      result = Issue.where("issues.project_id = ?", issue.project_id)
+      result = result.where("issues.fixed_version_id is not null")
+      result = result.where("journals.journalized_type = 'Issue'")
+      result = result.where("prop_key = 'estimated_hours'")
+      result = result.where("journal_details.value is not null")
+      result = result.all(
+        :select => 'issues.id as issue_id, convert(journals.created_on , date) day, journal_details.value as estimated_hours',
+        :joins => 'join journals on issues.id = journals.journalized_id join journal_details on journals.id = journal_details.journal_id ',
+        :order => 'day desc')
+      @journal_estimation = {}
+      result.each do |row|
+        @journal_estimation[row.issue_id] ||= []
+        @journal_estimation[row.issue_id] << { :date => row.day, :estimated_hours => row.estimated_hours }
+      end
+    end
+
+    journals = @journal_estimation[issue.id]
+    unless journals
+      estimated_hours = issue.estimated_hours
+    else
+      row = journals.find do |row|
+        (row[:date] <= key_date)
+      end
+      if row
+      end
+      estimated_hours = row ? row[:estimated_hours] : issue.estimated_hours
+    end
+
+    return estimated_hours
   end
 
   def date_from_key(range, i)
