@@ -28,7 +28,7 @@ class ChartsBurndownBaseController < ChartsController
         estimated << [total_estimated_hours[index], l(:charts_burndown_hint_estimated, { :estimated_hours => RedmineCharts::Utils.round(total_estimated_hours[index]) })]
       end
       if RedmineCharts::RangeUtils.date_from_day(key).to_time <= Time.now
-          remaining << [total_remaining_hours[index], l(:charts_burndown2_hint_remaining, { :remaining_hours => RedmineCharts::Utils.round(total_remaining_hours[index]), :work_done => total_done[index] > 0 ? Integer(total_done[index]) : 0 })]
+        remaining << [total_remaining_hours[index], l(:charts_burndown2_hint_remaining, { :remaining_hours => RedmineCharts::Utils.round(total_remaining_hours[index]), :work_done => total_done[index] > 0 ? Integer(total_done[index]) : 0 })]
         logged  << [total_logged_hours[index], l(:charts_burndown_hint_logged, { :logged_hours => RedmineCharts::Utils.round(total_logged_hours[index]) })]
         if total_predicted_hours[index] > total_base_estimated_hours[index]
           predicted << [total_predicted_hours[index], l(:charts_burndown_hint_predicted_over_estimation, { :predicted_hours => RedmineCharts::Utils.round(total_predicted_hours[index]), :hours_over_estimation => RedmineCharts::Utils.round(total_predicted_hours[index] - total_base_estimated_hours[index]) }), true]
@@ -109,8 +109,8 @@ class ChartsBurndownBaseController < ChartsController
       estimated_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
       velocities_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
 
-      #チケットの作成日と開始日の早い日付と、バージョンの開始日を比較し、大きい方をチケット追加日とする
-      #チケット追加日は総工数を求める際に利用
+      #チケットの作成日と開始日の早い日付と、バージョンの開始日を比較し、大きい方をチケット発生日とする
+      #チケット発生日は総工数を求める際に利用（発生日～バージョンの終了日までが工数が発生する期間）
       issue_add_date = issue.created_on.to_date
       if issue.start_date
         issue_add_date = issue.start_date if issue.start_date < issue.created_on.to_date
@@ -130,31 +130,35 @@ class ChartsBurndownBaseController < ChartsController
       range_diff_days = (issue_end_date - issue_start_date)
 
       @range[:keys].each_with_index do |key, i|
+        #keyを日付に変換
+        key_date = date_from_key(@range, i)
+
+        #その日における工数を取得
+        #途中で工数の変更が行われることも想定
+        estimated_hours = get_estimated_hours(issue, key_date)
+
         if issue_add_key <= key
-            #追加日に至るまではゼロ、追加日以降は +1
+            #発生日以降のみカウントする。後程、進捗率の平均値を求める際に使用
           issues_per_date[i] += 1
         end
-        if issue_add_key <= key
-          if issue.estimated_hours
-            #追加日に至るまではゼロ、追加日以降はすべて同一の値（issue.estimated_hours）
-            estimated_hours_per_issue[issue.id][i] = issue.estimated_hours
-          end
-        end
-        if issue_add_key <= key && key <= issue_end_key
-          if issue.estimated_hours
-            next_key = (@range[:keys][i].to_i + 1).to_s
-            next_date = RedmineCharts::RangeUtils.date_from_unit(next_key, @range[:range])
-            key_date = next_date - 1
 
+        if estimated_hours
+
+          if issue_add_key <= key
+            #発生日に至るまでは工数はゼロ。
+            estimated_hours_per_issue[issue.id][i] = estimated_hours
+          end
+
+          if issue_add_key <= key && key <= issue_end_key
             if range_diff_days > 0
               #チケットの期間が二日以上ある場合、その期間の残工数(基準)を滑らかに減少させたい
               #例：三日のタスクの場合、１日目の残工数は予定工数の2/3、２日目の残工数は予定工数の1/3、３日目の残工数はゼロ
               if key_date < issue_start_date
                 #開始日の直前まで
-                velocities_per_issue[issue.id][i] = issue.estimated_hours
+                velocities_per_issue[issue.id][i] = estimated_hours
               elsif key_date < issue_end_date
                 #開始日～最終日の直前
-                velocities_per_issue[issue.id][i] = (issue.estimated_hours / range_diff_days) * (issue_end_date - key_date)
+                velocities_per_issue[issue.id][i] = (estimated_hours / range_diff_days) * (issue_end_date - key_date)
               else
                 #最終日もしくは経過後
                 velocities_per_issue[issue.id][i] = 0
@@ -163,14 +167,16 @@ class ChartsBurndownBaseController < ChartsController
               #チケットの期間が一日の場合は実施日の時点で残工数はゼロになる
               if key_date < issue_start_date
                 #開始日の直前まで
-                velocities_per_issue[issue.id][i] = issue.estimated_hours
+                velocities_per_issue[issue.id][i] = estimated_hours
               else
                 #実施日もしくは経過後
                 velocities_per_issue[issue.id][i] = 0
               end
             end
           end
+
         end
+
       end
     end
 
@@ -196,7 +202,7 @@ class ChartsBurndownBaseController < ChartsController
           total_velocities[index] += velocity
         end
         total_estimated_hours[index] += base_estimate
-        total_estimate_hours_for_done[index] += estimated
+        total_estimate_hours_for_done[index] += base_estimate #estimated
         if estimated > 0
           estimated_count += 1
         else
@@ -255,6 +261,28 @@ class ChartsBurndownBaseController < ChartsController
         []
       end
     end
+  end
+
+  def get_estimated_hours(issue, key_date)
+    #journalから最新の工数を利用する
+    return issue.estimated_hours
+  end
+
+  def date_from_key(range, i)
+      #keyを日付に変換
+      #rangeがweekやyearの場合、単純にRangeUtils.date_from_unitでキーを変換すると
+      #週や年の最初の日が手に入る。
+      #実際に欲しいのは対象の週/年の最終日。
+
+      key_date = RedmineCharts::RangeUtils.date_from_unit(range[:keys][i], @range[:range])
+      case range[:range]
+      when :days
+      when :weeks
+        key_date += 6
+      when :months
+        key_date = (key_date >> 1) - 1
+      end
+      return key_date
   end
 
 end
