@@ -19,7 +19,7 @@ class ChartDoneRatio < ActiveRecord::Base
 
     select = "#{range[:column]} as range_value, '#{range[:range]}' as range_type, chart_done_ratios.done_ratio, chart_done_ratios.issue_id"
 
-    rows = all(:select => select, :joins => joins, :conditions => conditions, :order => '1 asc, 3 asc')
+    rows = all(:select => select, :joins => joins, :conditions => conditions, :order => 'range_value asc, chart_done_ratios.day asc')
 
     rows.each do |row|
       done_ratios[row.issue_id.to_i] ||= Array.new(range[:keys].size, 0)
