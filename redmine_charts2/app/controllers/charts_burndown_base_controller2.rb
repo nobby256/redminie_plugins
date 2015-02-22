@@ -1,6 +1,5 @@
 # coding: utf-8
-class ChartsBurndownBaseController < ChartsController
-  include Redmine::Utils::DateCalculation
+class ChartsBurndownBaseController2 < ChartsController
 
   unloadable
 
@@ -8,7 +7,7 @@ class ChartsBurndownBaseController < ChartsController
 
   def get_data_core
 
-    total_base_estimated_hours, total_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_ideal_hours = get_data_for_burndown_chart
+    total_base_estimated_hours, total_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_velocities = get_data_for_burndown_chart
 
     max = 0
     remaining = []
@@ -16,7 +15,6 @@ class ChartsBurndownBaseController < ChartsController
     estimated = []
     logged = []
     predicted = []
-    ideal = []
 
     @range[:keys].each_with_index do |key, index|
       max = total_predicted_hours[index] if max < total_predicted_hours[index]
@@ -24,8 +22,11 @@ class ChartsBurndownBaseController < ChartsController
       max = total_base_estimated_hours[index] if max < total_base_estimated_hours[index]
 
       base_estimated << [total_base_estimated_hours[index], l(:charts_burndown_hint_base_estimated, { :estimated_hours => RedmineCharts::Utils.round(total_base_estimated_hours[index]) })]
-      estimated << [total_estimated_hours[index], l(:charts_burndown_hint_estimated, { :estimated_hours => RedmineCharts::Utils.round(total_estimated_hours[index]) })]
-      ideal << [total_ideal_hours[index], l(:charts_burndown_hint_ideal, { :ideal_hours => RedmineCharts::Utils.round(total_ideal_hours[index]) })]
+      if total_estimated_hours[index] > total_base_estimated_hours[index]
+        estimated << [total_estimated_hours[index], l(:charts_burndown_hint_estimated_over_base_estimation, { :estimated_hours => RedmineCharts::Utils.round(total_estimated_hours[index]), :hours_over_estimation => RedmineCharts::Utils.round(total_estimated_hours[index] - total_base_estimated_hours[index]) })]
+      else
+        estimated << [total_estimated_hours[index], l(:charts_burndown_hint_estimated, { :estimated_hours => RedmineCharts::Utils.round(total_estimated_hours[index]) })]
+      end
       if RedmineCharts::RangeUtils.date_from_day(key).to_time <= Time.now
         remaining << [total_remaining_hours[index], l(:charts_burndown2_hint_remaining, { :remaining_hours => RedmineCharts::Utils.round(total_remaining_hours[index]), :work_done => total_done[index] > 0 ? Integer(total_done[index]) : 0 })]
         logged  << [total_logged_hours[index], l(:charts_burndown_hint_logged, { :logged_hours => RedmineCharts::Utils.round(total_logged_hours[index]) })]
@@ -37,13 +38,21 @@ class ChartsBurndownBaseController < ChartsController
       end
     end
 
+    velocity = []
+
+    @range[:keys].size.times do |index|
+      velocity << [total_velocities[index], l(:charts_burndown2_hint_velocity, { :remaining_hours => RedmineCharts::Utils.round(total_velocities[index])})]
+    end
+
+    velocity[velocity.size-1] = [0, l(:charts_burndown2_hint_velocity, { :remaining_hours => 0.0})]
+
     sets = [
-#      [l(:charts_burndown_group_base_estimated), base_estimated],
+      [l(:charts_burndown_group_base_estimated), base_estimated],
       [l(:charts_burndown_group_estimated), estimated],
       [l(:charts_burndown_group_predicted), predicted],
       [l(:charts_burndown_group_logged), logged],
+      [l(:charts_burndown2_group_velocity), velocity],
       [l(:charts_burndown_group_remaining), remaining],
-      [l(:charts_burndown_group_ideal), ideal],
     ]
 
     {
@@ -86,10 +95,11 @@ class ChartsBurndownBaseController < ChartsController
     total_remaining_hours = Array.new(@range[:keys].size, 0)
     total_predicted_hours = Array.new(@range[:keys].size, 0)
     total_done = Array.new(@range[:keys].size, 0)
-    total_ideal_hours = Array.new(@range[:keys].size, 0)
+    total_velocities = Array.new(@range[:keys].size, 0)
     issues_per_date = Array.new(@range[:keys].size, 0)
     logged_hours_per_issue = {}
     estimated_hours_per_issue = {}
+    velocities_per_issue = {}
 
     logged_hours_per_issue[0] = Array.new(@range[:keys].size, current_logged_hours_per_issue[0] || 0)
     estimated_hours_per_issue[0] ||= Array.new(@range[:keys].size, 0)
@@ -97,6 +107,7 @@ class ChartsBurndownBaseController < ChartsController
     issues.each do |issue|
       logged_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, current_logged_hours_per_issue[issue.id] || 0)
       estimated_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
+      velocities_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
 
       #チケットの作成日と開始日の早い日付と、バージョンの開始日を比較し、大きい方をチケット発生日とする
       #チケット発生日は総工数を求める際に利用（発生日～バージョンの終了日までが工数が発生する期間）
@@ -105,6 +116,28 @@ class ChartsBurndownBaseController < ChartsController
         issue_add_date = issue.start_date if issue.start_date < issue.created_on.to_date
       end
       issue_add_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue_add_date, @range[:range]), @range[:keys].first].max
+
+      #チケットの開始日とバージョンの開始日を比較し、大きい方を開始日とする
+      #チケットに開始日がない場合は、バージョンの開始日で代用
+      if issue.start_date
+        issue_start_date = issue.start_date
+        issue_start_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue_start_date, @range[:range]), @range[:keys].first].max
+      else
+        issue_start_date = RedmineCharts::RangeUtils.date_from_unit(@range[:keys].first, @range[:range])
+        issue_start_key = @range[:keys].first
+      end
+
+      #チケットの終了日とバージョンの終了日を比較し、小さい方を終了日とする
+      #チケットに終了日が無い場合は、バージョンの期限で代用
+      if issue.due_date
+        issue_end_date = issue.due_date
+        issue_end_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue_end_date, @range[:range]), @range[:keys].last].min
+      else
+        issue_end_date = RedmineCharts::RangeUtils.date_from_unit(@range[:keys].last, @range[:range])
+        issue_end_key = @range[:keys].last
+      end
+
+      range_diff_days = (issue_end_date - issue_start_date)
 
       @range[:keys].each_with_index do |key, i|
         #keyを日付に変換
@@ -124,12 +157,36 @@ class ChartsBurndownBaseController < ChartsController
             estimated_hours_per_issue[issue.id][i] = estimated_hours
           end
 
+          if issue_add_key <= key && key <= issue_end_key
+            if range_diff_days > 0
+              #チケットの期間が二日以上ある場合、その期間の残工数(基準)を滑らかに減少させたい
+              #例：三日のタスクの場合、１日目の残工数は予定工数の2/3、２日目の残工数は予定工数の1/3、３日目の残工数はゼロ
+              if key_date < issue_start_date
+                #開始日の直前まで
+                velocities_per_issue[issue.id][i] = issue.estimated_hours
+              elsif key_date < issue_end_date
+                #開始日～最終日の直前
+                velocities_per_issue[issue.id][i] = (issue.estimated_hours / range_diff_days) * (issue_end_date - key_date)
+              else
+                #最終日もしくは経過後
+                velocities_per_issue[issue.id][i] = 0
+              end
+            else
+              #チケットの期間が一日の場合は実施日の時点で残工数はゼロになる
+              if key_date < issue_start_date
+                #開始日の直前まで
+                velocities_per_issue[issue.id][i] = issue.estimated_hours
+              else
+                #実施日もしくは経過後
+                velocities_per_issue[issue.id][i] = 0
+              end
+            end
+          end
+
         end
 
       end
     end
-
-    ideal_per_date = get_ideal_per_date(@range)
 
     rows.each do |row|
       index = @range[:keys].index(row.range_value.to_s)
@@ -145,13 +202,15 @@ class ChartsBurndownBaseController < ChartsController
         base_estimate = estimated_hours_per_issue[issue.id] ? estimated_hours_per_issue[issue.id][index] : 0
         estimated = (done_ratio > 0 and logged > 0) ? (logged/done_ratio*100) : base_estimate
         total_remaining_hours[index] += done_ratio > 0 ? estimated * (100-done_ratio) / 100 : estimated
+        velocity = velocities_per_issue[issue.id] ? velocities_per_issue[issue.id][index] : 0
 
         total_logged_hours[index] += logged
         if issue.tracker.is_in_roadmap?
           total_base_estimated_hours[index] += base_estimate
+          total_velocities[index] += velocity
         end
         total_estimated_hours[index] += base_estimate
-        total_estimate_hours_for_done[index] += estimated #base_estimated
+        total_estimate_hours_for_done[index] += base_estimate #estimated
         if estimated > 0
           estimated_count += 1
         else
@@ -168,18 +227,16 @@ class ChartsBurndownBaseController < ChartsController
 
       total_predicted_hours[index] = total_remaining_hours[index] + total_logged_hours[index]
 
-      total_ideal_hours[index] = RedmineCharts::Utils.round((total_estimated_hours[index] / ideal_per_date[0]) * ideal_per_date[index])
-
       total_logged_hours[index] = 0 if total_logged_hours[index] < 0.01
       total_base_estimated_hours[index] = 0 if total_base_estimated_hours[index] < 0.01
       total_estimated_hours[index] = 0 if total_estimated_hours[index] < 0.01
       total_remaining_hours[index] = 0 if total_remaining_hours[index] < 0.01
       total_done[index] = 0 if total_done[index] < 0.01
       total_predicted_hours[index] = 0 if total_predicted_hours[index] < 0.01
-      total_ideal_hours[index] = 0 if total_ideal_hours[index] < 0.01
+      total_velocities[index] = 0 if total_velocities[index] < 0.01
     end
 
-    [total_base_estimated_hours, total_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_ideal_hours]
+    [total_base_estimated_hours, total_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_velocities]
   end
 
   def get_title
@@ -264,30 +321,6 @@ class ChartsBurndownBaseController < ChartsController
         key_date = (key_date >> 1) - 1
       end
       return key_date
-  end
-
-  def get_ideal_per_date(range)
-    non_working = non_working_week_days
-    ideal_days = Array.new(@range[:keys].size, 0)
-    range[:keys].each_with_index do |key, i|
-      case range[:range]
-      when :days
-        day = date_from_key(range, i)
-        wday = day.cwday
-        ideal_days[i] = non_working.include?(wday) ? 0 : 1
-      when :weeks, :months
-        ideal_days[i] = 1
-      end
-    end
-
-    ideal_per_date = Array.new(@range[:keys].size, 0)
-    (0 ... (ideal_per_date.size - 1)).each do |i|
-      (i ... (ideal_days.size - 1)).each do |index|
-        ideal_per_date[i] += ideal_days[index]
-      end
-    end
-
-    return ideal_per_date
   end
 
 end
