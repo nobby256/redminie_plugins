@@ -119,13 +119,23 @@ class ChartsBurndownBaseController < ChartsController
 
       #チケットの開始日とバージョンの開始日を比較し、大きい方を開始日とする
       #チケットに開始日がない場合は、バージョンの開始日で代用
-      issue_start_date = issue.start_date ? issue.start_date : @range[:keys].first
-      issue_start_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue.start_date, @range[:range]), @range[:keys].first].max
+      if issue.start_date
+        issue_start_date = issue.start_date
+        issue_start_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue_start_date, @range[:range]), @range[:keys].first].max
+      else
+        issue_start_date = RedmineCharts::RangeUtils.date_from_unit(@range[:keys].first, @range[:range])
+        issue_start_key = @range[:keys].first
+      end
 
       #チケットの終了日とバージョンの終了日を比較し、小さい方を終了日とする
       #チケットに終了日が無い場合は、バージョンの期限で代用
-      issue_end_date = issue.due_date ? issue.due_date : @range[:keys].last
-      issue_end_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue.due_date, @range[:range]), @range[:keys].last].min
+      if issue.due_date
+        issue_end_date = issue.due_date
+        issue_end_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue_end_date, @range[:range]), @range[:keys].last].min
+      else
+        issue_end_date = RedmineCharts::RangeUtils.date_from_unit(@range[:keys].last, @range[:range])
+        issue_end_key = @range[:keys].last
+      end
 
       range_diff_days = (issue_end_date - issue_start_date)
 
