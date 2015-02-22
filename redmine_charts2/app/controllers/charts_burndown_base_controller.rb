@@ -153,6 +153,7 @@ class ChartsBurndownBaseController < ChartsController
           if issue_add_key <= key
             #その日における工数を取得
             estimated_hours = get_estimated_hours(issue, key_date)
+p "key_date=#{key_date}  estimated_hours=#{estimated_hours}"
             #発生日に至るまでは工数はゼロ。
             estimated_hours_per_issue[issue.id][i] = estimated_hours
           end
@@ -280,9 +281,9 @@ class ChartsBurndownBaseController < ChartsController
       result = result.where("prop_key = 'estimated_hours'")
       result = result.where("journal_details.value is not null")
       result = result.all(
-        :select => 'issues.id as issue_id, convert(journals.created_on , date) day, journal_details.value as estimated_hours',
+        :select => 'issues.id as issue_id, convert(journals.created_on , date) day, journal_details.old_value as estimated_hours',
         :joins => 'join journals on issues.id = journals.journalized_id join journal_details on journals.id = journal_details.journal_id ',
-        :order => 'day desc')
+        :order => 'day asc')
       @journal_estimation = {}
       result.each do |row|
         @journal_estimation[row.issue_id] ||= []
@@ -294,12 +295,13 @@ class ChartsBurndownBaseController < ChartsController
     unless journals
       estimated_hours = issue.estimated_hours
     else
-      row = journals.find do |row|
-        (row[:date] <= key_date)
+      estimated_hours = issue.estimated_hours
+      journals.each do |row|
+        if row[:date] > key_date
+          estimated_hours = row[:estimated_hours]
+          break
+        end
       end
-      if row
-      end
-      estimated_hours = row ? row[:estimated_hours] : issue.estimated_hours
     end
 
     return estimated_hours
