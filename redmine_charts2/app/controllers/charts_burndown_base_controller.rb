@@ -143,18 +143,16 @@ class ChartsBurndownBaseController < ChartsController
         #keyを日付に変換
         key_date = date_from_key(@range, i)
 
-        #その日における工数を取得
-        #途中で工数の変更が行われることも想定
-        estimated_hours = get_estimated_hours(issue, key_date)
-
         if issue_add_key <= key
             #発生日以降のみカウントする。後程、進捗率の平均値を求める際に使用
           issues_per_date[i] += 1
         end
 
-        if estimated_hours
+        if issue.estimated_hours
 
           if issue_add_key <= key
+            #その日における工数を取得
+            estimated_hours = get_estimated_hours(issue, key_date)
             #発生日に至るまでは工数はゼロ。
             estimated_hours_per_issue[issue.id][i] = estimated_hours
           end
@@ -165,10 +163,10 @@ class ChartsBurndownBaseController < ChartsController
               #例：三日のタスクの場合、１日目の残工数は予定工数の2/3、２日目の残工数は予定工数の1/3、３日目の残工数はゼロ
               if key_date < issue_start_date
                 #開始日の直前まで
-                velocities_per_issue[issue.id][i] = estimated_hours
+                velocities_per_issue[issue.id][i] = issue.estimated_hours
               elsif key_date < issue_end_date
                 #開始日～最終日の直前
-                velocities_per_issue[issue.id][i] = (estimated_hours / range_diff_days) * (issue_end_date - key_date)
+                velocities_per_issue[issue.id][i] = (issue.estimated_hours / range_diff_days) * (issue_end_date - key_date)
               else
                 #最終日もしくは経過後
                 velocities_per_issue[issue.id][i] = 0
@@ -177,7 +175,7 @@ class ChartsBurndownBaseController < ChartsController
               #チケットの期間が一日の場合は実施日の時点で残工数はゼロになる
               if key_date < issue_start_date
                 #開始日の直前まで
-                velocities_per_issue[issue.id][i] = estimated_hours
+                velocities_per_issue[issue.id][i] = issue.estimated_hours
               else
                 #実施日もしくは経過後
                 velocities_per_issue[issue.id][i] = 0
