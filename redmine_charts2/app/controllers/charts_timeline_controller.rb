@@ -1,3 +1,4 @@
+# coding: utf-8
 class ChartsTimelineController < ChartsController
 
   unloadable
@@ -6,6 +7,36 @@ class ChartsTimelineController < ChartsController
 
   def get_data
     @grouping ||= :activity_id
+
+    @conditions[:fixed_version_ids] ||= get_fixed_version_ids(@project)
+    if @conditions[:fixed_version_ids].empty?
+      return { :error => :charts_error_no_version }
+    end
+    versions = Version.where("project_id=?", @project.id).all
+    
+    start_date = Time.now.to_date >> 1 #１ヶ月前をデフォルトとする
+    versions.each do |version|
+      if version.start_date
+        if start_date > version.start_date
+          start_date = version.start_date
+        end
+      end
+    end
+    end_date = nil
+    versions.each do |version|
+      if version.effective_date?
+        end_date ||= version.effective_date
+        if end_date < version.effective_date
+          end_date = version.effective_date
+        end
+      end
+    end
+    unless end_date
+      end_date = Time.now.to_date
+    end
+    
+    @range = RedmineCharts::RangeUtils.propose_range_for_two_dates(start_date, end_date)
+
     rows, @range = ChartTimeEntry.get_timeline(@grouping, @conditions, @range)
 
     sets = {}
@@ -72,7 +103,7 @@ class ChartsTimelineController < ChartsController
   end
 
   def show_date_condition
-    true
+    false
   end
 
   def get_grouping_options
@@ -81,7 +112,7 @@ class ChartsTimelineController < ChartsController
 
   def get_multiconditions_options
 #    RedmineCharts::ConditionsUtils.types
-    (RedmineCharts::ConditionsUtils.types - [:project_ids]).flatten
+    (RedmineCharts::ConditionsUtils.types - [:project_ids, :fixed_version_ids]).flatten
   end
 
 end
