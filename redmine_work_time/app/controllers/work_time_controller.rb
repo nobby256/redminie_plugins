@@ -1159,6 +1159,25 @@ private
       end
     end
 
+    #担当未割当にも関わらず、ステータスがデフォルト（未着手）でも完了でもないチケットは
+    #メンバー共通のチケットとみなす
+    issues = Issue.find(:all,
+                        :joins => "INNER JOIN issue_statuses ist on ist.id = issues.status_id ",
+                        :conditions => ["1 = 1
+                         and ((issues.assigned_to_id is null)
+                           and issues.start_date < :t2
+                           and ist.is_closed = false
+                           and ist.is_default = false
+                           )",
+                                        {:t2 => t2}])
+    issues.each do |issue|
+      next if @restrict_project && @restrict_project!=issue.project.id
+      next if !@this_user.allowed_to?(:log_time, issue.project)
+      next if !issue.visible?
+      prj_pack = make_pack_prj(@day_pack, issue.project)
+      issue_pack = make_pack_issue(prj_pack, issue)
+    end
+
     # 月間工数表から工数が無かった項目の削除と項目数のカウント
     @month_pack[:count_issues] = 0
     @month_pack[:odr_prjs].each do |prj_pack|
