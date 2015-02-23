@@ -4,7 +4,7 @@ ja:
   charts_link_timeline: "作業時間推移"
   charts_link_burndown: "プロジェクト バーンダウン"
   charts_link_burndown3: "バーンダウン"
-  charts_link_deviation: "総工数の差異確認"
+  charts_link_deviation: "工数の予実確認"
   charts_show_last: "表示"
   charts_show_last_days: "日"
   charts_show_last_weeks: "週"
