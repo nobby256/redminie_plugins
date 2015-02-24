@@ -268,14 +268,12 @@ class ChartsBurndownBaseController < ChartsController
   end
 
   def get_working_per_date(range)
-    non_working = non_working_week_days
     working_days = Array.new(@range[:keys].size, 0)
     (1 ... range[:keys].size).each do |i|
       case range[:range]
       when :days
         day = date_from_key(range, i)
-        wday = day.cwday
-        working_days[i] = non_working.include?(wday) ? 0 : 1
+        working_days[i] = is_holiday?(day) ? 0 : 1
         working_days[0] += working_days[i] #indexゼロは1以降の合計値として使う
       when :weeks, :months
         working_days[i] = 1
@@ -293,6 +291,25 @@ class ChartsBurndownBaseController < ChartsController
     end
 
     return working_per_date
+  end
+  
+  def is_holiday?(date)
+    non_working = non_working_week_days
+    wday = date.cwday
+    return true if non_working.include?(wday)
+
+    unless @holidays
+      @holidays = []
+      if Redmine::Plugin.installed?(:redmine_work_time)
+        #work_timeプラグインの休日登録機能を利用する
+        rows = WtHolidays.where("deleted_on is null").all
+        rows.each do |row|
+          @holidays << row.holiday
+        end
+      end
+    end
+    
+    return @holidays.include? date
   end
 
 end
