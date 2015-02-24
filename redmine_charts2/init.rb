@@ -15,6 +15,10 @@ ActionDispatch::Callbacks.to_prepare do
     Issue.send(:include, RedmineCharts::IssuePatch)
   end
 
+  unless Issue.included_modules.include? RedmineCharts::VersionPatch
+    Version.send(:include, RedmineCharts::VersionPatch)
+  end
+
   unless TimeEntry.included_modules.include? RedmineCharts::TimeEntryPatch
     TimeEntry.send(:include, RedmineCharts::TimeEntryPatch)
   end

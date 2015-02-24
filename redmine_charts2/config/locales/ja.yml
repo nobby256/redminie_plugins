@@ -128,3 +128,5 @@ ja:
   charts_saved_condition_flash_deleted: "条件が削除されました。"
   charts_saved_condition_flash_created: "条件が保存されました。"
   charts_saved_condition_flash_updated: "条件が更新されました。"
+  
+  field_range_start_date: "開始日"

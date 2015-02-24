@@ -6,6 +6,7 @@ require 'redmine_charts/conditions_utils'
 require 'redmine_charts/grouping_utils'
 require 'redmine_charts/range_utils'
 require 'redmine_charts/issue_patch'
+require 'redmine_charts/version_patch'
 require 'redmine_charts/time_entry_patch'
 
 module RedmineCharts

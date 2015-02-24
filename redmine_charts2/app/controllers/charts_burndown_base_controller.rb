@@ -81,7 +81,7 @@ class ChartsBurndownBaseController < ChartsController
       estimated_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
 
       #チケットの発生日がnilの場合は範囲の開始日をチケット発生日とする
-      issue_add_date = issue.start_date ? issue.start_date : RedmineCharts::RangeUtils.date_from_unit(range[:keys][0], @range[:range])
+      issue_add_date = issue.start_date ? issue.start_date : RedmineCharts::RangeUtils.date_from_unit(@range[:keys][0], @range[:range])
       issue_add_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue_add_date, @range[:range]), @range[:keys].first].max
 
       @range[:keys].each_with_index do |key, i|
