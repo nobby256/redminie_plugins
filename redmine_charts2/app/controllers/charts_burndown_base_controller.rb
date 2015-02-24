@@ -129,7 +129,7 @@ class ChartsBurndownBaseController < ChartsController
       end
     end
 
-    ideal_per_date = get_ideal_per_date(@range)
+    working_per_date = get_working_per_date(@range)
 
     rows.each do |row|
       index = @range[:keys].index(row.range_value.to_s)
@@ -168,7 +168,8 @@ class ChartsBurndownBaseController < ChartsController
 
       total_predicted_hours[index] = total_remaining_hours[index] + total_logged_hours[index]
 
-      total_ideal_hours[index] = RedmineCharts::Utils.round((total_estimated_hours[index] / ideal_per_date[0]) * ideal_per_date[index])
+      total_ideal_hours[index] = 0
+      total_ideal_hours[index] = RedmineCharts::Utils.round((total_estimated_hours[index] / working_per_date[0]) * working_per_date[index]) if working_per_date[0] != 0
 
       total_logged_hours[index] = 0 if total_logged_hours[index] < 0.01
       total_base_estimated_hours[index] = 0 if total_base_estimated_hours[index] < 0.01
@@ -266,28 +267,32 @@ class ChartsBurndownBaseController < ChartsController
       return key_date
   end
 
-  def get_ideal_per_date(range)
+  def get_working_per_date(range)
     non_working = non_working_week_days
-    ideal_days = Array.new(@range[:keys].size, 0)
-    range[:keys].each_with_index do |key, i|
+    working_days = Array.new(@range[:keys].size, 0)
+    (1 ... range[:keys].size).each do |i|
       case range[:range]
       when :days
         day = date_from_key(range, i)
         wday = day.cwday
-        ideal_days[i] = non_working.include?(wday) ? 0 : 1
+        working_days[i] = non_working.include?(wday) ? 0 : 1
+        working_days[0] += working_days[i] #indexゼロは1以降の合計値として使う
       when :weeks, :months
-        ideal_days[i] = 1
+        working_days[i] = 1
       end
     end
 
-    ideal_per_date = Array.new(@range[:keys].size, 0)
-    (0 ... (ideal_per_date.size - 1)).each do |i|
-      (i ... (ideal_days.size - 1)).each do |index|
-        ideal_per_date[i] += ideal_days[index]
+    working_per_date = Array.new(@range[:keys].size, 0)
+    working_per_date[0] = working_days[0]
+    (1 ... working_per_date.size).each do |i|
+      value = 0
+      (1 .. i).each do |index|
+        value += working_days[index]
       end
+      working_per_date[i] = working_per_date[0] - value
     end
 
-    return ideal_per_date
+    return working_per_date
   end
 
 end
