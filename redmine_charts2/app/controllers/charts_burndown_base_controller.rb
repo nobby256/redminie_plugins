@@ -86,7 +86,6 @@ class ChartsBurndownBaseController < ChartsController
     total_remaining_hours = Array.new(@range[:keys].size, 0)
     total_predicted_hours = Array.new(@range[:keys].size, 0)
     total_done = Array.new(@range[:keys].size, 0)
-    total_ideal_hours = Array.new(@range[:keys].size, 0)
     issues_per_date = Array.new(@range[:keys].size, 0)
     logged_hours_per_issue = {}
     estimated_hours_per_issue = {}
@@ -129,8 +128,6 @@ class ChartsBurndownBaseController < ChartsController
       end
     end
 
-    working_per_date = get_working_per_date(@range)
-
     rows.each do |row|
       index = @range[:keys].index(row.range_value.to_s)
       (0..(index-1)).each do |i|
@@ -168,18 +165,26 @@ class ChartsBurndownBaseController < ChartsController
 
       total_predicted_hours[index] = total_remaining_hours[index] + total_logged_hours[index]
 
-      total_ideal_hours[index] = 0
-      total_ideal_hours[index] = RedmineCharts::Utils.round((total_estimated_hours[index] / working_per_date[0]) * working_per_date[index]) if working_per_date[0] != 0
-
       total_logged_hours[index] = 0 if total_logged_hours[index] < 0.01
       total_base_estimated_hours[index] = 0 if total_base_estimated_hours[index] < 0.01
       total_estimated_hours[index] = 0 if total_estimated_hours[index] < 0.01
       total_remaining_hours[index] = 0 if total_remaining_hours[index] < 0.01
       total_done[index] = 0 if total_done[index] < 0.01
       total_predicted_hours[index] = 0 if total_predicted_hours[index] < 0.01
+    end
+    
+    #理想線を求める
+    #バージョンに開始日がない為、理想線の開始日をいつにするのか？が問題
+    #その為、実績時間が初めて記録された日の前日を理想線の開始日とする
+    #※実績時間がindex=0の場合の挙動にも注意
+    start_logged_index = total_logged_hours.index {|v| v > 0}
+    working_per_date, total_working = get_working_per_date(@range, start_logged_index)
+    total_ideal_hours = Array.new(@range[:keys].size, 0)
+    working_per_date.each_with_index do |working_days, index|
+      total_ideal_hours[index] = RedmineCharts::Utils.round((total_estimated_hours[index] / total_working) * working_per_date[index]) if total_working > 0
       total_ideal_hours[index] = 0 if total_ideal_hours[index] < 0.01
     end
-
+    
     [total_base_estimated_hours, total_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_ideal_hours]
   end
 
@@ -267,30 +272,31 @@ class ChartsBurndownBaseController < ChartsController
       return key_date
   end
 
-  def get_working_per_date(range)
+  def get_working_per_date(range, start_index)
+    total = 0
+
     working_days = Array.new(@range[:keys].size, 0)
-    (1 ... range[:keys].size).each do |i|
+    (start_index ... range[:keys].size).each do |i|
       case range[:range]
       when :days
         day = date_from_key(range, i)
         working_days[i] = is_holiday?(day) ? 0 : 1
-        working_days[0] += working_days[i] #indexゼロは1以降の合計値として使う
+        total += working_days[i]
       when :weeks, :months
         working_days[i] = 1
       end
     end
 
-    working_per_date = Array.new(@range[:keys].size, 0)
-    working_per_date[0] = working_days[0]
-    (1 ... working_per_date.size).each do |i|
+    working_per_date = Array.new(@range[:keys].size, total)
+    (start_index ... working_per_date.size).each do |i|
       value = 0
-      (1 .. i).each do |index|
+      (start_index .. i).each do |index|
         value += working_days[index]
       end
-      working_per_date[i] = working_per_date[0] - value
+      working_per_date[i] = total - value
     end
 
-    return working_per_date
+    return [working_per_date, total]
   end
   
   def is_holiday?(date)
