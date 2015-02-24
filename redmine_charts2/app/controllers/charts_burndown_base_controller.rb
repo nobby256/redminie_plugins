@@ -128,12 +128,20 @@ class ChartsBurndownBaseController < ChartsController
       end
     end
 
+    #rangeの最初における実績時間を求める
+    #実績時間が発生し始めた日は、rangeの範囲より古い可能性がある。
+    #その場合にrangeの最初の日の実績時間をゼロにするわけにはいかない
     rows.each do |row|
       index = @range[:keys].index(row.range_value.to_s)
       (0..(index-1)).each do |i|
+        #rowsはrangeの範囲における実績時間
+        #ogged_hours_per_issueはチケット毎の実績時間の総合計
+        #rangeの範囲の実績時間を総合計から引くと、rangeの最初の日の実績時間が残る
+        #仮に実績時間の発生日がrangeの範囲内に収まっている場合は、引き算をした結果、ゼロになる
         logged_hours_per_issue[row.group_id.to_i][i] -= row.logged_hours.to_f if logged_hours_per_issue[row.group_id.to_i]
       end
     end
+
     @range[:keys].each_with_index do |key,index|
       estimated_count = 0
       issues.each do |issue|
@@ -174,14 +182,28 @@ class ChartsBurndownBaseController < ChartsController
     end
     
     #理想線を求める
-    #バージョンに開始日がない為、理想線の開始日をいつにするのか？が問題
-    #その為、実績時間が初めて記録された日の前日を理想線の開始日とする
-    #※実績時間がindex=0の場合の挙動にも注意
-    start_logged_index = total_logged_hours.index {|v| v > 0}
+    #少々複雑な処理を行っている
+    #
+    #ポイント１
+    #  理想線の開始日をいつにするのか？
+    #  実績値がゼロの最終日（実績値発生の直前の日）を理想線を開始日とする
+    #  ただし、range開始の時点で実績値がゼロより大きい場合は、range開始日を理想線の開始日とする
+    #
+    #ポイント２
+    #  理想線の開始値は常に総工数とは限らない
+    #  rangeの開始日の時点で残工数がいくらか減っているケースがある
+    #  そのケースを考慮し、理想線の値をそのまま利用する事は行わない
+    #
+    start_logged_index = 0 #理想線の開始インデックス
+    total_logged_hours.each_with_index do |v, i|
+      (v == 0) ? start_logged_index = i : break
+    end
     working_per_date, total_working = get_working_per_date(@range, start_logged_index)
     total_ideal_hours = Array.new(@range[:keys].size, 0)
+    ideal_diff = total_estimated_hours[0] - total_remaining_hours[0]
     working_per_date.each_with_index do |working_days, index|
-      total_ideal_hours[index] = RedmineCharts::Utils.round((total_estimated_hours[index] / total_working) * working_per_date[index]) if total_working > 0
+      #total_ideal_hours[index] = RedmineCharts::Utils.round((total_estimated_hours[index] / total_working) * working_per_date[index]) if total_working > 0
+      total_ideal_hours[index] = RedmineCharts::Utils.round(((total_estimated_hours[index] - ideal_diff) / total_working) * working_per_date[index]) if total_working > 0
       total_ideal_hours[index] = 0 if total_ideal_hours[index] < 0.01
     end
     
@@ -276,7 +298,7 @@ class ChartsBurndownBaseController < ChartsController
     total = 0
 
     working_days = Array.new(@range[:keys].size, 0)
-    (start_index ... range[:keys].size).each do |i|
+    ((start_index + 1) ... range[:keys].size).each do |i|
       case range[:range]
       when :days
         day = date_from_key(range, i)
@@ -288,14 +310,13 @@ class ChartsBurndownBaseController < ChartsController
     end
 
     working_per_date = Array.new(@range[:keys].size, total)
-    (start_index ... working_per_date.size).each do |i|
+    ((start_index + 1) ... working_per_date.size).each do |i|
       value = 0
       (start_index .. i).each do |index|
         value += working_days[index]
       end
       working_per_date[i] = total - value
     end
-
     return [working_per_date, total]
   end
   
