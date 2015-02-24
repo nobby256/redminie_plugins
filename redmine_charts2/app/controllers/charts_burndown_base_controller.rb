@@ -64,9 +64,8 @@ class ChartsBurndownBaseController < ChartsController
       conditions[column_name] = v if v and column_name
     end
 
+    #末端のチケットのみ取得する
     issues = Issue.includes(:tracker).all(:conditions => conditions)
-
-    # remove parent issues
     issues_children = []
     issues.each do |issue|
       issues_children << issue.parent_id if RedmineCharts.has_sub_issues_functionality_active and issue.parent_id
@@ -75,16 +74,10 @@ class ChartsBurndownBaseController < ChartsController
 
     rows, @range = ChartTimeEntry.get_timeline(:issue_id, @conditions, @range)
 
-    logged_hours_per_issue = {}
     estimated_hours_per_issue = {}
-
-    current_logged_hours_per_issue = ChartTimeEntry.get_aggregation_for_issue(@conditions, @range)
-    logged_hours_per_issue[0] = Array.new(@range[:keys].size, current_logged_hours_per_issue[0] || 0)
     estimated_hours_per_issue[0] ||= Array.new(@range[:keys].size, 0)
-
     issues_per_date = Array.new(@range[:keys].size, 0)
     issues.each do |issue|
-      logged_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, current_logged_hours_per_issue[issue.id] || 0)
       estimated_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
 
       #チケットの発生日がnilの場合は範囲の開始日をチケット発生日とする
@@ -94,28 +87,29 @@ class ChartsBurndownBaseController < ChartsController
       @range[:keys].each_with_index do |key, i|
         #keyを日付に変換
         key_date = date_from_key(@range, i)
-
         if issue_add_key <= key
             #発生日以降のみカウントする。後程、進捗率の平均値を求める際に使用
           issues_per_date[i] += 1
         end
-
         if issue.estimated_hours
-
           if issue_add_key <= key
             #その日における工数を取得
             estimated_hours = get_estimated_hours(issue, key_date)
             #発生日に至るまでは工数はゼロ。
             estimated_hours_per_issue[issue.id][i] = estimated_hours
           end
-
         end
-
       end
     end
 
     #実績時間を求める
     #実績時間が発生し始めた日は範囲の開始日より古い可能性がある事を想定しなければならない
+    current_logged_hours_per_issue = ChartTimeEntry.get_aggregation_for_issue(@conditions, @range)
+    logged_hours_per_issue = {}
+    logged_hours_per_issue[0] = Array.new(@range[:keys].size, current_logged_hours_per_issue[0] || 0)
+    issues.each do |issue|
+      logged_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, current_logged_hours_per_issue[issue.id] || 0)
+    end
     rows.each do |row|
       index = @range[:keys].index(row.range_value.to_s)
       (0..(index-1)).each do |i|
