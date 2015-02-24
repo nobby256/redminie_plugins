@@ -75,34 +75,20 @@ class ChartsBurndownBaseController < ChartsController
 
     rows, @range = ChartTimeEntry.get_timeline(:issue_id, @conditions, @range)
 
-    current_logged_hours_per_issue = ChartTimeEntry.get_aggregation_for_issue(@conditions, @range)
-
-    done_ratios_per_issue = ChartDoneRatio.get_timeline_for_issue(@conditions, @range)
-
-    total_estimate_hours_for_done = Array.new(@range[:keys].size, 0)
-    total_base_estimated_hours = Array.new(@range[:keys].size, 0)
-    total_estimated_hours = Array.new(@range[:keys].size, 0)
-    total_logged_hours = Array.new(@range[:keys].size, 0)
-    total_remaining_hours = Array.new(@range[:keys].size, 0)
-    total_predicted_hours = Array.new(@range[:keys].size, 0)
-    total_done = Array.new(@range[:keys].size, 0)
-    issues_per_date = Array.new(@range[:keys].size, 0)
     logged_hours_per_issue = {}
     estimated_hours_per_issue = {}
 
+    current_logged_hours_per_issue = ChartTimeEntry.get_aggregation_for_issue(@conditions, @range)
     logged_hours_per_issue[0] = Array.new(@range[:keys].size, current_logged_hours_per_issue[0] || 0)
     estimated_hours_per_issue[0] ||= Array.new(@range[:keys].size, 0)
 
+    issues_per_date = Array.new(@range[:keys].size, 0)
     issues.each do |issue|
       logged_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, current_logged_hours_per_issue[issue.id] || 0)
       estimated_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
 
-      #チケットの作成日と開始日の早い日付と、バージョンの開始日を比較し、大きい方をチケット発生日とする
-      #チケット発生日は総工数を求める際に利用（発生日～バージョンの終了日までが工数が発生する期間）
-      issue_add_date = issue.created_on.to_date
-      if issue.start_date
-        issue_add_date = issue.start_date if issue.start_date < issue.created_on.to_date
-      end
+      #チケットの発生日が無ければ、range[0]の日付をチケット発生日とする
+      issue_add_date = issue.start_date ? issue.start_date : RedmineCharts::RangeUtils.date_from_unit(range[:keys][0], @range[:range])
       issue_add_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue_add_date, @range[:range]), @range[:keys].first].max
 
       @range[:keys].each_with_index do |key, i|
@@ -141,6 +127,16 @@ class ChartsBurndownBaseController < ChartsController
         logged_hours_per_issue[row.group_id.to_i][i] -= row.logged_hours.to_f if logged_hours_per_issue[row.group_id.to_i]
       end
     end
+
+    done_ratios_per_issue = ChartDoneRatio.get_timeline_for_issue(@conditions, @range)
+
+    total_estimate_hours_for_done = Array.new(@range[:keys].size, 0)
+    total_base_estimated_hours = Array.new(@range[:keys].size, 0)
+    total_estimated_hours = Array.new(@range[:keys].size, 0)
+    total_logged_hours = Array.new(@range[:keys].size, 0)
+    total_remaining_hours = Array.new(@range[:keys].size, 0)
+    total_predicted_hours = Array.new(@range[:keys].size, 0)
+    total_done = Array.new(@range[:keys].size, 0)
 
     @range[:keys].each_with_index do |key,index|
       estimated_count = 0
