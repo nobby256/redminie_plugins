@@ -87,7 +87,7 @@ class ChartsBurndownBaseController < ChartsController
       logged_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, current_logged_hours_per_issue[issue.id] || 0)
       estimated_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, 0)
 
-      #チケットの発生日が無ければ、range[0]の日付をチケット発生日とする
+      #チケットの発生日がnilの場合は範囲の開始日をチケット発生日とする
       issue_add_date = issue.start_date ? issue.start_date : RedmineCharts::RangeUtils.date_from_unit(range[:keys][0], @range[:range])
       issue_add_key = [RedmineCharts::RangeUtils.format_date_with_unit(issue_add_date, @range[:range]), @range[:keys].first].max
 
@@ -114,9 +114,8 @@ class ChartsBurndownBaseController < ChartsController
       end
     end
 
-    #rangeの最初における実績時間を求める
-    #実績時間が発生し始めた日は、rangeの範囲より古い可能性がある。
-    #その場合にrangeの最初の日の実績時間をゼロにするわけにはいかない
+    #実績時間を求める
+    #実績時間が発生し始めた日は範囲の開始日より古い可能性がある事を想定しなければならない
     rows.each do |row|
       index = @range[:keys].index(row.range_value.to_s)
       (0..(index-1)).each do |i|
