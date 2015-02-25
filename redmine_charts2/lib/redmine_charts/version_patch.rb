@@ -9,6 +9,7 @@ module RedmineCharts
       base.class_eval do
 
         validates :range_start_date, :date => true
+        validate :validate_version
         safe_attributes 'range_start_date'
 
         alias_method_chain :start_date, :charts
@@ -37,6 +38,12 @@ module RedmineCharts
       def start_date=(arg)
         self.range_start_date=(arg)
       end
+
+        def validate_version
+          if effective_date && range_start_date && (range_start_date_changed? || effective_date_changed?) && effective_date < range_start_date
+            errors.add :effective_date, :greater_than_start_date
+          end
+        end
 
     end
 
