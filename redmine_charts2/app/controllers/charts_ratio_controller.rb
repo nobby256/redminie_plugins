@@ -8,6 +8,9 @@ class ChartsRatioController < ChartsController
     @grouping ||= :activity_id
 
     rows = ChartTimeEntry.get_aggregation(@grouping, @conditions)
+    unless rows
+      return { :error => :charts_error_no_data }
+    end
 
     bigger_rows = []
     total_hours = 0

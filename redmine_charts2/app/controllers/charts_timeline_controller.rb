@@ -8,35 +8,28 @@ class ChartsTimelineController < ChartsController
   def get_data
     @grouping ||= :activity_id
 
-    @conditions[:fixed_version_ids] ||= get_fixed_version_ids(@project)
-    if @conditions[:fixed_version_ids].empty?
-      return { :error => :charts_error_no_version }
+    start_date = get_logged_start_date(@conditions)
+    unless start_date
+      return { :error => :charts_error_no_data }
     end
-    versions = Version.where("project_id=?", @project.id).all
-    
-    start_date = Time.now.to_date >> 1 #１ヶ月前をデフォルトとする
-    versions.each do |version|
-      if version.start_date
-        if start_date > version.start_date
-          start_date = version.start_date
-        end
-      end
-    end
-    end_date = nil
-    versions.each do |version|
-      if version.effective_date?
-        end_date ||= version.effective_date
-        if end_date < version.effective_date
-          end_date = version.effective_date
-        end
-      end
-    end
-    unless end_date
-      end_date = Time.now.to_date
-    end
-    
-    @range = RedmineCharts::RangeUtils.propose_range_for_two_dates(start_date, end_date)
+    start_date -= 1 #もっとも古い実績時間の一日前
 
+    #このチャートは全バージョンが対象のチャートなので
+    #バージョンを絞り込む必要性はない
+    versions = Version.where("project_id=?", @project.id)
+                      .where("effective_date is not null")
+                      .order("effective_date desc")
+                      .limit(1)
+                      .all
+    if versions.empty?
+      end_date = Time.now.to_date
+    else
+      end_date = versions.first[:effective_date]
+      #なにかのミスでバージョン期日より開始日が未来日の場合はリカバリーする
+      end_date = Time.now.to_date if end_date < start_date
+    end
+
+    @range = RedmineCharts::RangeUtils.propose_range_for_two_dates(start_date, end_date)
     rows, @range = ChartTimeEntry.get_timeline(@grouping, @conditions, @range)
 
     sets = {}
@@ -113,6 +106,32 @@ class ChartsTimelineController < ChartsController
   def get_multiconditions_options
 #    RedmineCharts::ConditionsUtils.types
     (RedmineCharts::ConditionsUtils.types - [:project_ids, :fixed_version_ids]).flatten
+  end
+
+  private
+
+  def get_logged_start_date(raw_conditions)
+    conditions = {}
+
+    raw_conditions.each do |c, v|
+      column_name = RedmineCharts::ConditionsUtils.to_column(c, "chart_time_entries")
+      conditions[column_name] = v if v and column_name
+    end
+
+    joins = "left join issues on issues.id = issue_id"
+
+    column_name = RedmineCharts::ConditionsUtils.to_column(:days, "chart_time_entries")
+
+    select = "#{column_name} as unit_value"
+
+    rows = ChartTimeEntry.where("#{column_name} != 0").all(:joins => joins, :select => select, :conditions => conditions, :readonly => true, :order => "1 asc", :limit => 1)
+    if rows.empty?
+      return nil
+    end
+    unit = rows.first[:unit_value]
+    date = RedmineCharts::RangeUtils.date_from_day(unit.to_s)
+    
+    return date
   end
 
 end
