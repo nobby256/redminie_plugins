@@ -136,7 +136,13 @@ class ChartsBurndownBaseController < ChartsController
       issues.each do |issue|
         logged = logged_hours_per_issue[issue.id] ? logged_hours_per_issue[issue.id][index] : 0
         done_ratio = done_ratios_per_issue[issue.id] ? done_ratios_per_issue[issue.id][index] : 0
-        base_estimate = estimated_hours_per_issue[issue.id] ? estimated_hours_per_issue[issue.id][index] : 0
+#        base_estimate = estimated_hours_per_issue[issue.id] ? estimated_hours_per_issue[issue.id][index] : 0
+        if estimated_hours_per_issue[issue.id]
+          base_estimate = estimated_hours_per_issue[issue.id][index]
+          base_estimate ||= 0
+        else
+          base_estimate = 0
+        end
         estimated = (done_ratio > 0 and logged > 0) ? (logged/done_ratio*100) : base_estimate
         total_remaining_hours[index] += done_ratio > 0 ? estimated * (100-done_ratio) / 100 : estimated
 
@@ -177,15 +183,18 @@ class ChartsBurndownBaseController < ChartsController
     #  理想線の開始日をいつにするのか？
     #  実績値がゼロの最終日（実績値発生の直前の日）を理想線を開始日とする
     #  ただし、range開始の時点で実績値がゼロより大きい場合は、range開始日を理想線の開始日とする
+    #  なお、実績値が登録されていない場合はrange開始日を理想線の開始日とする
     #
     #ポイント２
     #  理想線の開始値は常に総工数とは限らない
     #  rangeの開始日の時点で残工数がいくらか減っているケースがある
     #  そのケースを考慮し、理想線の値をそのまま利用する事は行わない
     #
-    start_logged_index = 0 #理想線の開始インデックス
-    total_logged_hours.each_with_index do |v, i|
-      (v == 0) ? start_logged_index = i : break
+    start_logged_index = 0
+    if !rows.empty?
+      total_logged_hours.each_with_index do |v, i|
+        (v == 0) ? start_logged_index = i : break
+      end
     end
     working_per_date, total_working = get_working_per_date(@range, start_logged_index)
     total_ideal_hours = Array.new(@range[:keys].size, 0)
