@@ -196,7 +196,7 @@ class ChartsDeviationController < ChartsController
   end
 
   def get_multiconditions_options
-    [:fixed_version_ids, :tracker_ids]
+    [:fixed_version_ids, :tracker_ids, :assigned_to_ids]
   end
 
   def show_pages
