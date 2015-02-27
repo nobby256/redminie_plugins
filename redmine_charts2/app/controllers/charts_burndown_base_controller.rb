@@ -135,6 +135,7 @@ class ChartsBurndownBaseController < ChartsController
       estimated_count = 0
       issues.each do |issue|
         logged = logged_hours_per_issue[issue.id] ? logged_hours_per_issue[issue.id][index] : 0
+        #ポイント：進捗率の履歴が見つからなかった場合はissue.done_ratioではなくゼロ固定
         done_ratio = done_ratios_per_issue[issue.id] ? done_ratios_per_issue[issue.id][index] : 0
 #        base_estimate = estimated_hours_per_issue[issue.id] ? estimated_hours_per_issue[issue.id][index] : 0
         if estimated_hours_per_issue[issue.id]
