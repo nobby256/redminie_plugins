@@ -16,7 +16,6 @@ class ChartsBurndown3Controller < ChartsBurndownBaseController
 
     end_date = version.effective_date ? version.effective_date.to_date : Time.now.to_date
     start_date = version.start_date ? version.start_date : end_date << 1 #開始日が無い場合は期日の１か月前をデフォルトの開始日とする
-p "start_date=#{start_date}   end_date=#{end_date}"
     @range = RedmineCharts::RangeUtils.propose_range_for_two_dates(start_date, end_date)
     
     return get_data_core
