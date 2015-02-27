@@ -6,7 +6,7 @@ class ChartsTimelineController < ChartsController
   protected
 
   def get_data
-    @grouping ||= :activity_id
+    @grouping ||= :user_id
 
     start_date = get_logged_start_date(@conditions)
     unless start_date
