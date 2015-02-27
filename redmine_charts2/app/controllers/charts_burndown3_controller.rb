@@ -35,7 +35,7 @@ class ChartsBurndown3Controller < ChartsBurndownBaseController
 
   def get_multiconditions_options
 #    (RedmineCharts::ConditionsUtils.types - [:activity_ids, :user_ids, :fixed_version_ids, :project_ids]).flatten
-    [ :issue_ids, :user_ids, :category_ids, :tracker_ids, :assigned_to_ids ]
+    [ :issue_ids, :category_ids, :tracker_ids, :assigned_to_ids ]
   end
 
 end
