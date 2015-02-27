@@ -1,3 +1,4 @@
+# coding: utf-8
 class WorkTimeController < ApplicationController
   unloadable
   #  before_filter :find_project, :authorize
@@ -1054,6 +1055,7 @@ private
     hours.each do |hour|
       next if @restrict_project && @restrict_project!=hour.project.id
       work_time = hour.hours
+      hour.hours = nil if hour.hours.to_i == 0 # ゼロ時間の場合はクリア
       if hour.issue && hour.issue.visible? then
         # 表示項目に工数のプロジェクトがあるかチェック→なければ項目追加
         prj_pack = make_pack_prj(@month_pack, hour.project)

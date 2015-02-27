@@ -6,6 +6,9 @@
     <td><%=l(:field_remaining_hours)%></td>
     <% end %>
     <td><%=l(:field_activity)%></td>
+<% #patch begin %>
+    <td><%=l(:field_done_ratio)%></td>
+<% #patch end %>
     <td><%=l(:field_status)%></td>
     <td><%=l(:field_comments)%></td>
     <% @custom_fields.each do |cf| %>
@@ -48,6 +51,9 @@
   <td>&nbsp;</td>
   <% end %>
   <td>&nbsp;</td>
+<% #patch begin %>
+  <td>&nbsp;</td>
+<% #patch end %>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <% @custom_fields.each do |cf| %>
@@ -89,18 +95,7 @@ prj_pack[:odr_issues].each do |issue_pack|
 
     <%= link_to(issue_html.html_safe, {:controller=>"issues", :action=>"show", :id=>issue_id}, :popup=>true) %>
     <%= print_issue_cost(issue) %>
-    <%if issue.editable? %>
-        <a name="<%='done_ratio'+issue.id.to_s%>"
-           href="#"
-           onclick="input_done_ratio(
-                   '<%=url_for(@link_params.merge(:action=>"ajax_done_ratio_input"))%>',
-                   <%=issue_id%>);
-                   return false;">
-          [<%=issue.done_ratio%>&#37;]
-        </a>
-    <%else%>
-        [<%=issue.done_ratio%>&#37;]
-    <%end%>
+    [<%=issue.done_ratio%>&#37;]
     <%if @this_uid==@crnt_uid then%>
     &nbsp;&nbsp;&nbsp;
     <a style="position:absolute;bottom:1px;right:10px;"
@@ -131,18 +126,27 @@ prj_pack[:odr_issues].each do |issue_pack|
   </td>
   <% end %>
   <td>
-    <%= select_tag "new_time_entry["+issue_id.to_s+"][0][activity_id]", options_for_select(activities,activity_default) %>
+    <%= select_tag "new_time_entry["+issue_id.to_s+"][0][activity_id]", options_for_select(activities), :include_blank => true %>
   </td>
+<% #patch begin %>
+  <td>
+    <%if issue.editable? %>
+      <%= text_field_tag("new_time_entry["+issue_id.to_s+"][0][done_ratio]", "", :size=>5) %>%
+    <%else%>
+      &nbsp;
+    <%end%>
+  </td>
+<% #patch end %>
   <td>
     <% if issue.new_statuses_allowed_to(User.current).length == 0 then %>
-      <%= issue.status %>
+      &nbsp;
     <% else %>
       <% select_name="new_time_entry["+issue_id.to_s+"][0][status_id]" %>
       <%= select_tag select_name,
                      options_for_select(issue.new_statuses_allowed_to(User.current).collect {|p| [p.name, p.id]},
-                                        issue.status_id),
+                                        ""),
                      :onchange => "statusUpdateOnDailyTable('#{select_name}')",
-                     :required => true %>
+                     :include_blank => true %>
     <% end %>
   </td>
   <td>
@@ -187,18 +191,7 @@ prj_pack[:odr_issues].each do |issue_pack|
     <%= link_to(issue_html.html_safe, {:controller=>"issues", :action=>"show", :id=>issue_id}, :popup=>true) %>
 
     <%= print_issue_cost(issue) %>
-    <%if issue.editable?%>
-            <a name="<%='done_ratio'+issue_id.to_s%>"
-               href="#"
-               onclick="input_done_ratio(
-                       '<%=url_for(@link_params.merge(:action=>"ajax_done_ratio_input"))%>',
-                       <%=issue_id%>);
-                       return false;">
-              [<%=issue.done_ratio%>&#37;]
-            </a>
-    <%else%>
-            [<%=issue.done_ratio%>&#37;]
-    <%end%>
+    [<%=issue.done_ratio%>&#37;]
     <%if @this_uid==@crnt_uid then%>
     &nbsp;&nbsp;&nbsp;
 
@@ -231,18 +224,27 @@ prj_pack[:odr_issues].each do |issue_pack|
   </td>
   <% end %>
   <td>
-    <%= select_tag "time_entry["+hour_id.to_s+"][activity_id]", options_for_select(activities, hour.activity_id), :required => true %>
+    <%= select_tag "time_entry["+hour_id.to_s+"][activity_id]", options_for_select(activities, hour.activity_id), :include_blank => true %>
   </td>
+<% #patch begin %>
+  <td>
+    <%if issue.editable? %>
+      <%= text_field_tag("time_entry["+hour_id.to_s+"][done_ratio]", hour[:done_ratio], :size=>5) %>%
+    <%else%>
+      <%= hour[:done_ratio] %>
+    <%end%>
+  </td>
+<% #patch end %>
   <td>
     <% if issue.new_statuses_allowed_to(User.current).length == 0 then %>
-      <%= issue.status %>
+      <%= hour[:status_id] %>
     <% else %>
       <% select_name="time_entry["+hour_id.to_s+"][status_id]" %>
       <%= select_tag select_name,
                      options_for_select(issue.new_statuses_allowed_to(User.current).collect {|p| [p.name, p.id]},
-                                        issue.status_id),
+                                        hour[:status_id]),
                      :onchange => "statusUpdateOnDailyTable('#{select_name}')",
-                     :required => true %>
+                     :include_blank => true %>
     <% end %>
   </td>
   <td>
@@ -269,6 +271,9 @@ end
       <td><%=sprintf("%1.1f", @day_pack[:other_remain]) if @day_pack[:other_remain]%></td>
   <% end %>
   <td>&nbsp;</td>
+<% #patch begin %>
+  <td>&nbsp;</td>
+<% #patch end %>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <% @custom_fields.each do |cf| %>
@@ -283,6 +288,9 @@ end
   <td>&nbsp;</td>
   <% end %>
   <td>&nbsp;</td>
+<% #patch begin %>
+  <td>&nbsp;</td>
+<% #patch end %>
   <td>&nbsp;</td>
   <td>&nbsp;</td>
   <% @custom_fields.each do |cf| %>

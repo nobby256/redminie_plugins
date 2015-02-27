@@ -3,6 +3,19 @@ class ChartTimeEntry < ActiveRecord::Base
   belongs_to :issue
 
   def self.get_timeline(raw_group, raw_conditions, range)
+    return ChartViewTimeline.get_timeline(raw_group, raw_conditions, range)
+  end
+
+  def self.get_aggregation_for_issue(raw_conditions, range)
+    return ChartViewTimeline.get_aggregation_for_issue(raw_conditions, range)
+  end
+
+  def self.get_aggregation(raw_group, raw_conditions)
+    return ChartViewAggregatedTimeline.get_aggregation(raw_group, raw_conditions)
+  end
+
+=begin
+  def self.get_timeline(raw_group, raw_conditions, range)
     group = RedmineCharts::GroupingUtils.to_column(raw_group, "chart_time_entries")
 
     conditions = {}
@@ -120,5 +133,5 @@ class ChartTimeEntry < ActiveRecord::Base
       row.estimated_hours = '0' unless row.estimated_hours
     end
   end
-
+=end
 end

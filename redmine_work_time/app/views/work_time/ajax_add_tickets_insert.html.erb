@@ -6,19 +6,7 @@
     <br/>
     <%= link_to(@issueHtml.html_safe, {:controller=>"issues", :action=>"show", :id=>@add_issue.id}, :popup=>true) %>
     <%= print_issue_cost(@add_issue) %>
-    <%if @add_issue.editable?%>
-        <a name="<%='done_ratio'+@add_issue.id.to_s%>"
-           href="#"
-           onclick="JavaScript:
-                   input_done_ratio(
-                           '<%=url_for(@link_params.merge(:action=>"ajax_done_ratio_input"))%>',
-                           <%=@add_issue.id%>);
-                   return false;">
-          [<%=@add_issue.done_ratio%>&#37;]
-        </a>
-    <%else%>
-        [<%=@add_issue.done_ratio%>&#37;]
-    <%end%>
+    [<%=@add_issue.done_ratio%>&#37;]
 
     <a style="position:absolute;bottom:1px;right:10px;"
        href="#"
@@ -45,15 +33,24 @@
   </td>
   <% end %>
   <td>
-    <%= select_tag "new_time_entry["+@add_issue_id+"]["+@add_count+"][activity_id]", options_for_select(@activities), :required => true %>
+    <%= select_tag "new_time_entry["+@add_issue_id+"]["+@add_count+"][activity_id]", options_for_select(@activities), :include_blank => true %>
   </td>
+<% #patch begin %>
+  <td>
+    <%if issue.editable? %>
+      <%= text_field_tag("new_time_entry["+@add_issue_id+"]["+@add_count+"][done_ratio]", "", :size=>5) %>%
+    <%else%>
+      &nbsp;
+    <%end%>
+  </td>
+<% #patch end %>
   <td>
   <%
     if @add_issue.new_statuses_allowed_to(User.current).length == 0
   %>
-     <%= @add_issue.status %>
+      &nbsp;
   <% else %>
-    <%= select_tag "new_time_entry["+@add_issue_id.to_s+"][0][status_id]", options_for_select(@add_issue.new_statuses_allowed_to(User.current), @add_issue.status), :required => true %>
+    <%= select_tag "new_time_entry["+@add_issue_id.to_s+"][0][status_id]", options_for_select(@add_issue.new_statuses_allowed_to(User.current), ""), :include_blank => true %>
   <% end %>
   </td>
   <td>

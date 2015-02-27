@@ -1,6 +1,15 @@
 class ChartDoneRatio < ActiveRecord::Base
 
   def self.get_timeline_for_issue(raw_conditions, range)
+    return ChartViewDoneRatio.get_timeline_for_issue(raw_conditions, range)
+  end
+  
+  def self.get_aggregation_for_issue(raw_conditions)
+    return ChartViewAggregatedDoneRatio.get_aggregation_for_issue(raw_conditions)
+  end
+
+=begin
+  def self.get_timeline_for_issue(raw_conditions, range)
     conditions = {}
     done_ratios = {}
 
@@ -56,5 +65,6 @@ class ChartDoneRatio < ActiveRecord::Base
 
     issues
   end
+=end
 
 end
