@@ -130,7 +130,9 @@ prj_pack[:odr_issues].each do |issue_pack|
   </td>
 <% #patch begin %>
   <td>
-    <%if issue.editable? %>
+    <%if !issue.safe_attribute?('done_ratio') %>
+      &nbsp;
+    <%elsif issue.editable? %>
       <%= text_field_tag("new_time_entry["+issue_id.to_s+"][0][done_ratio]", "", :size=>5) %>%
     <%else%>
       &nbsp;
@@ -228,7 +230,9 @@ prj_pack[:odr_issues].each do |issue_pack|
   </td>
 <% #patch begin %>
   <td>
-    <%if issue.editable? %>
+    <%if !issue.safe_attribute?('done_ratio') %>
+      &nbsp;
+    <%elsif issue.editable? %>
       <%= text_field_tag("time_entry["+hour_id.to_s+"][done_ratio]", hour[:done_ratio], :size=>5) %>%
     <%else%>
       <%= hour[:done_ratio] %>

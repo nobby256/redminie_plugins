@@ -600,6 +600,9 @@ private
               next
             end
           end
+          unless issue.safe_attribute?('done_ratio')
+            tm_vals.delete "done_ratio"
+          end
           if tm_vals["hours"].present? || tm_vals["done_ratio"].present? then
             if tm_vals["hours"].blank? && tm_vals["done_ratio"].present?
               tm_vals["hours"] = 0
@@ -637,6 +640,9 @@ private
           end
           tm.destroy
         else
+          unless tm.issue.safe_attribute?('done_ratio')
+            tm_vals.delete "done_ratio"
+          end
           if by_other && tm_vals.key?(:hours) && tm.hours.to_f != tm_vals[:hours].to_f
             append_text = "\n[#{Time.now.localtime.strftime("%Y-%m-%d %H:%M")}] #{User.current.to_s}"
             append_text += " update time entry of ##{issue_id.to_s}: -#{tm.hours.to_f}h- #{tm_vals[:hours].to_f}h"
@@ -656,14 +662,13 @@ private
     if issue_ids.size > 0
       issues = Issue.where("id in (?)", issue_ids).all
       issues.each do |issue|
+        next unless issue.safe_attribute?('done_ratio')
         entries = TimeEntry.where("done_ratio is not null")
                          .where("issue_id = ?", issue.id)
                          .order("spent_on desc, id desc")
                          .limit(1)
                          .all
-        if entries.empty?
-          #最低1件は見つかるはず・・
-        else
+        unless entries.empty?
           done_ratio = entries.first.done_ratio
           issue.done_ratio = done_ratio
           next if !issue.changed? #変更がない場合はスキップ
