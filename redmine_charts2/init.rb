@@ -8,20 +8,11 @@ require 'redmine_charts'
 
 #Dispatcher.to_prepare :redmine_charts do
 ActionDispatch::Callbacks.to_prepare do
-  require_dependency 'issue'
-  require_dependency 'time_entry'
-
-  unless Issue.included_modules.include? RedmineCharts::IssuePatch
-    Issue.send(:include, RedmineCharts::IssuePatch)
-  end
 
   unless Issue.included_modules.include? RedmineCharts::VersionPatch
     Version.send(:include, RedmineCharts::VersionPatch)
   end
 
-  unless TimeEntry.included_modules.include? RedmineCharts::TimeEntryPatch
-    TimeEntry.send(:include, RedmineCharts::TimeEntryPatch)
-  end
 end
 
 Redmine::Plugin.register :redmine_charts2 do

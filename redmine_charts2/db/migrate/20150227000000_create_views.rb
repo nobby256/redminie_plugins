@@ -1,4 +1,4 @@
-class AddColumnsToVersions < ActiveRecord::Migration
+class CreateViews < ActiveRecord::Migration
 
   def self.up
     execute <<-SQL
@@ -142,15 +142,19 @@ where
     execute <<-SQL
 drop view if exists chart_view_timelines
     SQL
+
     execute <<-SQL
 drop view if exists chart_view_aggregated_timelines
     SQL
+
     execute <<-SQL
 drop view if exists chart_view_done_ratios
     SQL
+
     execute <<-SQL
 drop view if exists chart_view_aggregated_done_ratios
     SQL
+
     execute <<-SQL
 drop view if exists chart_view_statuses
     SQL
