@@ -581,20 +581,28 @@ private
         return
       end
     end
-
+    
+    issue_ids = [] #更新対象のissue_id
+    
     # 新規工数の登録
     if params["new_time_entry"] then
       params["new_time_entry"].each do |issue_id, valss|
         issue = Issue.find_by_id(issue_id)
         next if issue.nil? || !issue.visible?
         next if !User.current.allowed_to?(:log_time, issue.project)
+        issue_ids << issue_id unless issue_ids.include?(issue_id)
         valss.each do |count, vals|
           tm_vals = vals.slice! "remaining_hours", "status_id"
-          next if tm_vals["hours"].blank? && vals["remaining_hours"].blank? && vals["status_id"].blank?
+          next if tm_vals["hours"].blank? && tm_vals["remaining_hours"].blank? && tm_vals["done_ratio"].blank? && tm_vals["status_id"].blank?
           if tm_vals["hours"].present? then
             if !tm_vals[:activity_id] then
               append_error_message_html(@message, 'Error: Issue'+issue_id+': No Activities!')
               next
+            end
+          end
+          if tm_vals["hours"].present? || tm_vals["done_ratio"].present? then
+            if tm_vals["hours"].blank? && tm_vals["done_ratio"].present?
+              tm_vals["hours"] = 0
             end
             if by_other
               append_text = "\n[#{Time.now.localtime.strftime("%Y-%m-%d %H:%M")}] #{User.current.to_s}"
@@ -618,6 +626,7 @@ private
       params["time_entry"].each do |id, vals|
         tm = TimeEntry.find(id)
         issue_id = tm.issue.id
+        issue_ids << issue_id unless issue_ids.include?(issue_id)
         tm_vals = vals.slice! "remaining_hours", "status_id"
         if tm_vals["hours"].blank? then
           # 工数指定が空文字の場合は工数項目を削除
@@ -639,6 +648,27 @@ private
         end
         if vals["remaining_hours"].present? || vals["status_id"].present? then
           append_error_message_html(@message, issue_update_to_remain_and_more(issue_id, vals))
+        end
+      end
+    end
+    
+    #チケットの進捗率を最新の値で更新
+    if issue_ids.size > 0
+      issues = Issue.where("id in (?)", issue_ids).all
+      issues.each do |issue|
+        entries = TimeEntry.where("done_ratio is not null")
+                         .where("issue_id = ?", issue.id)
+                         .order("spent_on desc, id desc")
+                         .limit(1)
+                         .all
+        if entries.empty?
+          #最低1件は見つかるはず・・
+        else
+          done_ratio = entries.first.done_ratio
+          issue.done_ratio = done_ratio
+          next if !issue.changed? #変更がない場合はスキップ
+          issue.is_add_time_entry = false #done_ratioを変更する事によるtime_entryへのinsertを抑制
+          issue.save
         end
       end
     end
@@ -1055,7 +1085,6 @@ private
     hours.each do |hour|
       next if @restrict_project && @restrict_project!=hour.project.id
       work_time = hour.hours
-      hour.hours = nil if hour.hours.to_i == 0 # ゼロ時間の場合はクリア
       if hour.issue && hour.issue.visible? then
         # 表示項目に工数のプロジェクトがあるかチェック→なければ項目追加
         prj_pack = make_pack_prj(@month_pack, hour.project)

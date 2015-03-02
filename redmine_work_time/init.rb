@@ -1,4 +1,19 @@
 require 'redmine'
+require_dependency 'redmine_work_time'
+
+Rails.configuration.to_prepare do
+  require_dependency 'issue'
+  require_dependency 'time_entry'
+
+  unless Issue.included_modules.include? RedmineWorkTime::IssuePatch
+    Issue.send(:include, RedmineWorkTime::IssuePatch)
+  end
+
+  unless TimeEntry.included_modules.include? RedmineWorkTime::TimeEntryPatch
+    TimeEntry.send(:include, RedmineWorkTime::TimeEntryPatch)
+  end
+
+end
 
 Redmine::Plugin.register :redmine_work_time do
   name 'Redmine Work Time plugin'
