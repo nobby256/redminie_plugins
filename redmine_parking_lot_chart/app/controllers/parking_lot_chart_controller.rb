@@ -34,7 +34,9 @@ class ParkingLotChartController < ApplicationController
       data.closed_issues_count = version.closed_issues_count
       data.effective_date = version.effective_date
       data.status = version.status
-      if version.effective_date
+      if version.status == 'closed'
+        data.issues_status = "closed"
+      elsif version.effective_date
         if data.open_issues_count == 0 && 0 < data.closed_issues_count
           data.issues_status = "closed"
         elsif version.effective_date < @today
@@ -79,9 +81,11 @@ class ParkingLotChartController < ApplicationController
 
   def find_versions
     unless params[:status]
-      return find_open_versions
+      return @versions
     else
-      if params[:status] == "closed"
+      if params[:status] == "open"
+        return find_open_versions
+      elsif params[:status] == "closed"
         return find_closed_versions
       elsif params[:status] == "locked"
         return find_locked_versions
@@ -90,7 +94,7 @@ class ParkingLotChartController < ApplicationController
       elsif params[:status] == "all"
         return @versions
       else
-        return find_open_versions
+        return @versions
       end
     end
   end

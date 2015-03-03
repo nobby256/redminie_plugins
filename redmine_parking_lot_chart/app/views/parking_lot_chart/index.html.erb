@@ -27,7 +27,7 @@
   </div>
   <h3><%= l(:parking_lot_chart_menu_filter) %></h3>
   <div<% if params[:status].nil? %><%= " style='font-weight:bold'" %><%  end %>>
-    <%= link_to l(:parking_lot_chart_open_version), {:controller => 'parking_lot_chart', :action => 'index', :project_id => @project.identifier} %><br />
+    <%= link_to l(:parking_lot_chart_open_version), {:controller => 'parking_lot_chart', :action => 'index', :project_id => @project.identifier}, :status => 'open' %><br />
   </div>
   <div<% if params[:status] == 'locked' %><%= " style='font-weight:bold'" %><%  end %>>
     <%= link_to l(:parking_lot_chart_locked_version), {:controller => 'parking_lot_chart', :action => 'index', :project_id => @project.identifier, :status => 'locked'} %><br />
