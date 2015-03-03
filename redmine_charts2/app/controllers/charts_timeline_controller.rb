@@ -8,7 +8,7 @@ class ChartsTimelineController < ChartsController
   def get_data
     @grouping ||= :user_id
 
-    start_date = get_logged_start_date(@conditions)
+    start_date = ChartTimeEntry.get_logged_start_date(@conditions)
     unless start_date
       return { :error => :charts_error_no_data }
     end
@@ -109,29 +109,5 @@ class ChartsTimelineController < ChartsController
   end
 
   private
-
-  def get_logged_start_date(raw_conditions)
-    conditions = {}
-
-    raw_conditions.each do |c, v|
-      column_name = RedmineCharts::ConditionsUtils.to_column(c, "chart_time_entries")
-      conditions[column_name] = v if v and column_name
-    end
-
-    joins = "left join issues on issues.id = issue_id"
-
-    column_name = RedmineCharts::ConditionsUtils.to_column(:days, "chart_time_entries")
-
-    select = "#{column_name} as unit_value"
-
-    rows = ChartTimeEntry.where("#{column_name} != 0").all(:joins => joins, :select => select, :conditions => conditions, :readonly => true, :order => "1 asc", :limit => 1)
-    if rows.empty?
-      return nil
-    end
-    unit = rows.first[:unit_value]
-    date = RedmineCharts::RangeUtils.date_from_day(unit.to_s)
-    
-    return date
-  end
 
 end

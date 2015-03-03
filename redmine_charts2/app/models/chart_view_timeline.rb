@@ -80,4 +80,28 @@ class ChartViewTimeline < ActiveRecord::Base
     issues
   end
 
+  def self.get_logged_start_date(raw_conditions)
+    conditions = {}
+
+    raw_conditions.each do |c, v|
+      column_name = RedmineCharts::ConditionsUtils.to_column(c, table_name)
+      conditions[column_name] = v if v and column_name
+    end
+
+    joins = "left join issues on issues.id = issue_id"
+
+    column_name = RedmineCharts::ConditionsUtils.to_column(:days, table_name)
+
+    select = "#{column_name} as unit_value"
+
+    rows = where("#{column_name} != 0").all(:joins => joins, :select => select, :conditions => conditions, :readonly => true, :order => "1 asc", :limit => 1)
+    if rows.empty?
+      return nil
+    end
+    unit = rows.first[:unit_value]
+    date = RedmineCharts::RangeUtils.date_from_day(unit.to_s)
+    
+    return date
+  end
+
 end

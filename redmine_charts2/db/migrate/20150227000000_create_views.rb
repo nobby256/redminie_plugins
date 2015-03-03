@@ -110,6 +110,7 @@ where
     SQL
 
     execute <<-SQL
+create view chart_view_statuses as
 select
   cast(spent_on as date) as spent_on
   , cast((tyear * 1000) + dayofyear(spent_on) as signed) as day

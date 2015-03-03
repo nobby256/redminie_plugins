@@ -14,6 +14,10 @@ class ChartTimeEntry < ActiveRecord::Base
     return ChartViewAggregatedTimeline.get_aggregation(raw_group, raw_conditions)
   end
 
+  def self.get_logged_start_date(raw_conditions)
+    return ChartViewTimeline.get_logged_start_date(raw_conditions)
+  end
+
 =begin
   def self.get_timeline(raw_group, raw_conditions, range)
     group = RedmineCharts::GroupingUtils.to_column(raw_group, "chart_time_entries")
