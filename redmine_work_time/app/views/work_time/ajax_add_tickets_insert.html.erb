@@ -37,7 +37,7 @@
   </td>
 <% #patch begin %>
   <td>
-    <%if !issue.safe_attribute?('done_ratio') %>
+    <%if !@add_issue.safe_attribute?('done_ratio') %>
       &nbsp;
     <%elsif @add_issue.editable? %>
       <%= text_field_tag("new_time_entry["+@add_issue_id+"]["+@add_count+"][done_ratio]", "", :size=>5) %>%
