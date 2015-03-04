@@ -30,8 +30,14 @@ module QueryWithVersion
         end
 
         if add_filter_version_id.present?
-          @query.add_filter("fixed_version_id", "=", [add_filter_version_id])
-          @querying_version = Version.find(add_filter_version_id)
+          if add_filter_version_id == '0'
+            @query.add_filter("fixed_version_id", '!*', [''])
+            @querying_version = {:id => 0, :name => l(:label_none)}
+          else
+            @query.add_filter("fixed_version_id", "=", [add_filter_version_id])
+            version = Version.find(add_filter_version_id)
+            @querying_version = {:id => version.id, :name => version.name}
+          end
         end
       end
      

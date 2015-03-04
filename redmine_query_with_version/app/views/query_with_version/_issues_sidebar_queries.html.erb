@@ -11,15 +11,20 @@
 
   $(function() {
     <% if @querying_version %>
-      $("#content h2").append(" (<%= j t(:field_fixed_version) %>: <%= j @querying_version.name %>)");
+      $("#content h2").append(" (<%= j t(:field_fixed_version) %>: <%= j @querying_version[:name] %>)");
     <% end %>
   });
 <% end %>
 
 <% if @project and sidebar_queries.any? %>
+<%
+  options = Version.visible.all(:conditions => {:project_id => @project.id}).collect do |version|
+              [version.name, version.id]
+            end
+  options << [l(:label_none), 0]
+%>
 <p>
 <%= t(:field_fixed_version) %>
-<%= collection_select :query_with_version, :fixed_version_id, Version.visible.all(:conditions => {:project_id => @project.id}), :id, :name,
-  {:include_blank => true, :selected => @querying_version.try(:id) || ""} %>
+<%= select_tag 'query_with_version[fixed_version_id]', options_for_select(options), {:selected =>@querying_version ? @querying_version[:id] : "", :include_blank => true} %>
 </p>
 <% end %>
