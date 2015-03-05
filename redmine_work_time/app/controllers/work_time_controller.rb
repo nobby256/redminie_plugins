@@ -593,7 +593,7 @@ private
         issue_ids << issue_id unless issue_ids.include?(issue_id)
         valss.each do |count, vals|
           tm_vals = vals.slice! "remaining_hours", "status_id"
-          next if tm_vals["hours"].blank? && tm_vals["remaining_hours"].blank? && tm_vals["done_ratio"].blank? && tm_vals["status_id"].blank?
+          next if tm_vals["hours"].blank? && tm_vals["done_ratio"].blank?
           if tm_vals["hours"].present? then
             if !tm_vals[:activity_id] then
               append_error_message_html(@message, 'Error: Issue'+issue_id+': No Activities!')
@@ -693,6 +693,7 @@ private
     end
     issue.safe_attributes = vals
     return if !issue.changed?
+    issue.is_add_time_entry = false #issue変更によるtime_entryへのinsertを抑制
     issue.save
     hour_update_check_error(issue, issue_id)
   end
