@@ -149,13 +149,13 @@ class ChartsController < ApplicationController
         chart.x_axis = x
       end
 
-      unless get_x_legend.blank?
+      unless get_x_legend.nil?
         legend = XLegend.new(get_x_legend)
         legend.set_style('{font-size: 12px}')
         chart.set_x_legend(legend)
       end
 
-      unless get_y_legend.blank?
+      unless get_y_legend.nil?
         legend = YLegend.new(get_y_legend)
         legend.set_style('{font-size: 12px}')
         chart.set_y_legend(legend)
