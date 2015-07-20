@@ -187,7 +187,7 @@ class ChartsController < ApplicationController
     nil
   end
 
-  # Returns chart type: line, pie or stack
+  # Returns chart type: line, pie or stack or burndown
   def get_type
     :line
   end

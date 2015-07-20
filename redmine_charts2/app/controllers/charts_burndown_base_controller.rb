@@ -22,6 +22,7 @@ class ChartsBurndownBaseController < ChartsController
     base_estimated = []
     estimated = []
     logged = []
+    hours = []
     predicted = []
     ideal = []
 
@@ -36,6 +37,7 @@ class ChartsBurndownBaseController < ChartsController
       if RedmineCharts::RangeUtils.date_from_day(key).to_time <= Time.now
         remaining << [total_remaining_hours[index], l(:charts_burndown2_hint_remaining, { :remaining_hours => RedmineCharts::Utils.round(total_remaining_hours[index]), :work_done => total_done[index] > 0 ? Integer(total_done[index]) : 0 })]
         logged  << [total_logged_hours[index], l(:charts_burndown_hint_logged, { :logged_hours => RedmineCharts::Utils.round(total_logged_hours[index]) })]
+        hours  << [logged_hours_per_range[index], l(:charts_burndown_hint_hours, { :hours => RedmineCharts::Utils.round(logged_hours_per_range[index]) })]
         if total_predicted_hours[index] > total_base_estimated_hours[index]
           predicted << [total_predicted_hours[index], l(:charts_burndown_hint_predicted_over_estimation, { :predicted_hours => RedmineCharts::Utils.round(total_predicted_hours[index]), :hours_over_estimation => RedmineCharts::Utils.round(total_predicted_hours[index] - total_base_estimated_hours[index]) }), true]
         else
@@ -45,13 +47,21 @@ class ChartsBurndownBaseController < ChartsController
     end
 
     sets = [
-#      [l(:charts_burndown_group_base_estimated), base_estimated],
-      [l(:charts_burndown_group_estimated), estimated],
-      [l(:charts_burndown_group_predicted), predicted],
-      [l(:charts_burndown_group_logged), logged],
-      [l(:charts_burndown_group_remaining), remaining],
-      [l(:charts_burndown_group_ideal), ideal],
-    ]
+              # 折れ線グラフ
+              [
+               #[l(:charts_burndown_group_base_estimated), base_estimated],
+                [l(:charts_burndown_group_estimated), estimated],
+                [l(:charts_burndown_group_predicted), predicted],
+                [l(:charts_burndown_group_logged), logged],
+                [l(:charts_burndown_group_remaining), remaining],
+                [l(:charts_burndown_group_ideal), ideal]
+              ],
+              # 棒グラフ
+              [
+                [l(:charts_burndown_group_hours), hours]
+#                [l(:charts_burndown_group_hours), logged_hours_per_range]
+              ]
+           ]
 
     {
       :labels => @range[:labels],
@@ -349,6 +359,10 @@ class ChartsBurndownBaseController < ChartsController
     end
     
     return @holidays.include? date
+  end
+
+  def get_type
+    :burndown
   end
 
 end
