@@ -8,7 +8,14 @@ class ChartsBurndownBaseController < ChartsController
 
   def get_data_core
 
-    total_base_estimated_hours, total_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_ideal_hours = get_data_for_burndown_chart
+    total_base_estimated_hours, 
+    total_estimated_hours, 
+    total_logged_hours, 
+    total_remaining_hours, 
+    total_predicted_hours, 
+    total_done, 
+    total_ideal_hours, 
+    logged_hours_per_range = get_data_for_burndown_chart
 
     max = 0
     remaining = []
@@ -110,11 +117,17 @@ class ChartsBurndownBaseController < ChartsController
     issues.each do |issue|
       logged_hours_per_issue[issue.id] ||= Array.new(@range[:keys].size, current_logged_hours_per_issue[issue.id] || 0)
     end
+    
+    logged_hours_per_range = Array.new(@range[:keys].size, 0) #日別の作業時間
+    
     rows.each do |row|
+#p 'row.range_value=' + row.range_value.to_s + '   row.group_id=' + row.group_id.to_s + '   row.logged_hours=' + row.logged_hours.to_s   
+#例）row.range_value=2015060   row.group_id=1   row.logged_hours=100
       index = @range[:keys].index(row.range_value.to_s)
+      logged_hours_per_range[index] += row.logged_hours.to_f
       (0..(index-1)).each do |i|
         #rowsはrangeの範囲における実績時間
-        #ogged_hours_per_issueはチケット毎の実績時間の総合計
+        #logged_hours_per_issueはチケット毎の実績時間の総合計
         #rangeの範囲の実績時間を総合計から引くと、rangeの最初の日の実績時間が残る
         #仮に実績時間の発生日がrangeの範囲内に収まっている場合は、引き算をした結果、ゼロになる
         logged_hours_per_issue[row.group_id.to_i][i] -= row.logged_hours.to_f if logged_hours_per_issue[row.group_id.to_i]
@@ -206,7 +219,7 @@ class ChartsBurndownBaseController < ChartsController
       total_ideal_hours[index] = 0 if total_ideal_hours[index] < 0.01
     end
     
-    [total_base_estimated_hours, total_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_ideal_hours]
+    [total_base_estimated_hours, total_estimated_hours, total_logged_hours, total_remaining_hours, total_predicted_hours, total_done, total_ideal_hours, logged_hours_per_range]
   end
 
   def get_title

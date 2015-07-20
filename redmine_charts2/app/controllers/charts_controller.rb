@@ -149,13 +149,13 @@ class ChartsController < ApplicationController
         chart.x_axis = x
       end
 
-      unless get_x_legend.nil?
+      unless get_x_legend.blank?
         legend = XLegend.new(get_x_legend)
         legend.set_style('{font-size: 12px}')
         chart.set_x_legend(legend)
       end
 
-      unless get_x_legend.nil?
+      unless get_y_legend.blank?
         legend = YLegend.new(get_y_legend)
         legend.set_style('{font-size: 12px}')
         chart.set_y_legend(legend)
@@ -207,7 +207,7 @@ class ChartsController < ApplicationController
     nil
   end
 
-  # Returns Y legend
+  # Returns X legend
   def get_x_legend
     nil
   end
