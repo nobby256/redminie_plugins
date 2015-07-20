@@ -8,6 +8,7 @@ module RedmineCharts
 
 
       data[:sets].each do |set|
+        #[0]はシリーズ名
         line = OpenFlashChart::Line.new
         line.text = set[0]
         line.width = 2
@@ -16,6 +17,15 @@ module RedmineCharts
 
         j = -1
 
+        #[1]はデータの配列
+        #
+        #値が配列の場合
+        #[1][x][0]は値
+        #[1][x][1]はツールチップ
+        #[1][x][2]は???
+        #
+        #値が配列ではない場合
+        #[1][x]は値
         vals = set[1].collect do |v|
           j += 1
           if v.is_a? Array
